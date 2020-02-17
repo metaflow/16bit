@@ -1,33 +1,43 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 
+/* Controller/debugger. Controls "bus driver" to operate the bus.
+Supported ops:
+- write to the bus "w<decimal>", e.g. "w446".
+- write to the bus and clock "W<decimal>".
+- read bus "r", responds with decimal value.
+- disconnect from bus "x"
+- disconnect all signals "z"
+- send clock signal "c<half width ms>". E.g. "c50". Waits for a whole cycle.
+Each command responds with a line.
+ */
+
 SoftwareSerial port(3 /* rx */, 4 /* tx */);
 
-const int CLK = 13;
-const int BTN = 2;
-const int BUS_SIZE = 16;
-const int SIGNALS_SIZE = 3;
-const int SIGNALS[SIGNALS_SIZE] = {5, 6, 7};
-const unsigned long serial_speed = 38400;
-char driver_state = '?';
-int prev_btn = 0;
-int cycle = 0;
-int pressed_cycles = 0;
+const int           CLK = 13;
+const int           BTN = 2;
+const int           BUS_SIZE = 16;
+const int           SIGNALS_SIZE = 3;
+const int           SIGNALS[SIGNALS_SIZE] = {5, 6, 7};
+const unsigned long serial_speed = 115200;
+char                driver_state = '?';
+int                 prev_btn = 0;
+int                 cycle = 0;
+int                 pressed_cycles = 0;
 
 void driver(char s, uint16_t value) {
   if (driver_state == 'x' && s == 'x') return;
-  driver_state = s;  
+  driver_state = s;
   port.println(String(s) + String(value));
-   // To make sure that driver received and had a chance to react.
+  // To make sure that driver received and had a chance to react.
   if (s == 'x') delay(10);
 }
 
-void driver(char s) {
-  driver(s, 0);
-}
+void driver(char s) { driver(s, 0); }
 
 void releaseBus() {
   driver('x');
+  port.readStringUntil('\n');
 }
 
 void releaseSignals() {
@@ -61,9 +71,7 @@ uint16_t readBus() {
   return port.readStringUntil('\n').toInt();
 }
 
-void writeBus(uint16_t x) {
-  driver('w', x);
-}
+void writeBus(uint16_t x) { driver('w', x); }
 
 void signal(uint8_t i, uint8_t v) {
   pinMode(SIGNALS[i], OUTPUT);
@@ -74,9 +82,7 @@ void next() {
   uint16_t v = 0;
   if (cycle < BUS_SIZE) {
     releaseSignals();
-    for (int i = 0; i < BUS_SIZE; i++) {
-      v += (i == cycle) << i;
-    }
+    for (int i = 0; i < BUS_SIZE; i++) { v += (i == cycle) << i; }
     writeBus(v);
     Serial.println(String("set bus=") + String(v) + " " + formatBinary(v));
   } else {
@@ -98,41 +104,49 @@ void clock(int w) {
 }
 
 void processSerial() {
-  if (Serial.available()) {
-    String s = Serial.readStringUntil('\n');
-    s.replace("\r", "");
-    if (s.length() == 0) return;
-    char op = s[0];
-    if (op == 'b') {
-      uint16_t val = s.substring(1).toInt();
-      writeBus(val);
-    }
-    if (op == 'r') {
-      Serial.println(readBus());
-    }
-    if (op == 's') {
-      int i = s[1] == '1';
+  if (!Serial.available()) return;
+  String s = Serial.readStringUntil('\n');
+  if (s.length() == 0) return;
+  char op = s[0];
+  switch (op) {
+    case 'w':
+      port.println(s);
+      Serial.println(op);
+      break;
+    case 'W':
+      port.println(s);
+      clock(0);
+      Serial.println(op);
+      break;
+    case 'r':
+      port.println(s);
+      Serial.println(port.readStringUntil('\n'));
+      break;
+    case 'x':
+      port.println(s);
+      Serial.println(port.readStringUntil('\n'));
+      break;
+    case 's':
+      int i = s[1] - '0';
       int v = s[2] == '1';
       signal(i, v);
-    }
-    if (op == 'z') {
-      releaseBus();
-    }
-    if (op == 'x') {
+      Serial.println(op);
+      break;
+    case 'z':
       releaseSignals();
-    }
-    if (op == 'c') {
+      Serial.println(op);
+      break;
+    case 'c':
       clock(s.substring(1).toInt());
-    }
+      Serial.println(op);
+      break;
   }
 }
 
 void processButton() {
   int btn = digitalRead(BTN);
   if (prev_btn != btn) {
-    if (btn == LOW) {
-      clock(100);
-    }
+    if (btn == LOW) { clock(100); }
     prev_btn = btn;
   } else {
     if (btn == LOW) {
