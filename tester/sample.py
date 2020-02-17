@@ -17,7 +17,7 @@ class Ctrl:
         return ctrl.readLine()
 
     def signal(self, a, b):
-        self.send('s{}{}'.format(a, 1 if b else 0))
+        self.send('s{}{}'.format(a, b))
 
     def releaseBus(self):
         self.send('x')
@@ -45,21 +45,50 @@ if len(sys.argv) < 3:
 ctrl = Ctrl(sys.argv[2])
 
 # skip init lines
-print(ctrl.readLine())
-print(ctrl.readLine())
+while True:
+    s = ctrl.readLine()
+    if s != "":
+        break
+    pass
 
 ctrl.releaseBus()
 ctrl.releaseSignal()
 
-# write speed
-start = time.time()
-v = 2095
-for i in range(v):
-    ctrl.setBus(i)
-end = time.time()
-print(end - start)
-print(v / (end - start), "Hz")
-print((end - start) / v, "s per cycle")
+def test():
+    # write speed
+    start = time.time()
+    v = 2095
+    for i in range(v):
+        ctrl.setBus(i)
+    end = time.time()
+    print(end - start)
+    print(v / (end - start), "Hz")
+    print((end - start) / v, "s per cycle")
+
+ctrl.signal(0, 1)
+ctrl.signal(1, 1)
+ctrl.signal(2, 1)
+ctrl.signal(3, 1)
+ctrl.signal(4, 1)
+
+input("all signals 1")
+
+ctrl.signal(0, 0)
+ctrl.signal(1, 0)
+ctrl.signal(2, 0)
+ctrl.signal(3, 0)
+ctrl.signal(4, 0)
+
+input("all signals 0")
+
+
+ctrl.signal(0, 2)
+ctrl.signal(1, 2)
+ctrl.signal(2, 2)
+ctrl.signal(3, 2)
+ctrl.signal(4, 2)
+
+input("all signals disconnected")
 
 while (1):
     ctrl.signal(0, 1)

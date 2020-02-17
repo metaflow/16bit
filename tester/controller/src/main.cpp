@@ -7,6 +7,7 @@ Supported ops:
 - write to the bus and clock "W<decimal>".
 - read bus "r", responds with decimal value.
 - disconnect from bus "x"
+- set signal "s<pin><value>", pin=0..4, value = 0 / 1 - active low/high, 2 - disconnect.
 - disconnect all signals "z"
 - send clock signal "c<half width ms>". E.g. "c50". Waits for a whole cycle.
 Each command responds with a line.
@@ -17,8 +18,8 @@ SoftwareSerial port(3 /* rx */, 4 /* tx */);
 const int           CLK = 13;
 const int           BTN = 2;
 const int           BUS_SIZE = 16;
-const int           SIGNALS_SIZE = 3;
-const int           SIGNALS[SIGNALS_SIZE] = {5, 6, 7};
+const int           SIGNALS_SIZE = 5;
+const int           SIGNALS[SIGNALS_SIZE] = {5, 6, 7, 8, 9};
 const unsigned long serial_speed = 115200;
 char                driver_state = '?';
 int                 prev_btn = 0;
@@ -74,8 +75,12 @@ uint16_t readBus() {
 void writeBus(uint16_t x) { driver('w', x); }
 
 void signal(uint8_t i, uint8_t v) {
-  pinMode(SIGNALS[i], OUTPUT);
-  digitalWrite(SIGNALS[i], v);
+  if (v == 2) {
+    pinMode(SIGNALS[i], INPUT);
+  } else {
+    pinMode(SIGNALS[i], OUTPUT);
+    digitalWrite(SIGNALS[i], v);
+  }
 }
 
 void next() {
@@ -128,7 +133,7 @@ void processSerial() {
       break;
     case 's':
       int i = s[1] - '0';
-      int v = s[2] == '1';
+      int v = s[2] - '0';
       signal(i, v);
       Serial.println(op);
       break;
