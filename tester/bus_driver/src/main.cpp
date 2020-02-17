@@ -9,7 +9,7 @@ Interacts via serail port and supports commands (send as a line):
 
 const int BUS_SIZE = 16;
 const int BUS[] = {4,  5,  6,      7,      8,      9,      10,     11,
-                   12, 13, PIN_A0, PIN_A1, PIN_A2, PIN_A3, PIN_A4, PIN_A5};
+                   12, 3, PIN_A0, PIN_A1, PIN_A2, PIN_A3, PIN_A4, PIN_A5};
 
 void setup() {
   Serial.begin(115200);
