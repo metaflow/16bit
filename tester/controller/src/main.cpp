@@ -7,7 +7,8 @@ Supported ops:
 - write to the bus and clock "W<decimal>".
 - read bus "r", responds with decimal value.
 - disconnect from bus "x"
-- set signal "s<pin><value>", pin=0..4, value = 0 / 1 - active low/high, 2 - disconnect.
+- set signal "s<pin><value>", pin=0..4, value = 0 / 1 - active low/high.
+- get signal "g<pin". That also puts pin in "passive mode".
 - disconnect all signals "z"
 - send clock signal "c<half width ms>". E.g. "c50". Waits for a whole cycle.
 Each command responds with a line.
@@ -20,7 +21,7 @@ const int           BTN = 2;
 const int           BUS_SIZE = 16;
 const int           SIGNALS_SIZE = 5;
 const int           SIGNALS[SIGNALS_SIZE] = {5, 6, 7, 8, 9};
-const unsigned long serial_speed = 115200;
+const unsigned long serial_speed = 57600;
 char                driver_state = '?';
 int                 prev_btn = 0;
 int                 cycle = 0;
@@ -48,6 +49,7 @@ void releaseSignals() {
 void setup() {
   Serial.begin(serial_speed);
   port.begin(serial_speed);
+  port.setTimeout(5000);
   port.listen();
   pinMode(CLK, OUTPUT);
   pinMode(BTN, INPUT_PULLUP);
@@ -131,12 +133,19 @@ void processSerial() {
       port.println(s);
       Serial.println(port.readStringUntil('\n'));
       break;
-    case 's':
+    case 's': {
       int i = s[1] - '0';
       int v = s[2] - '0';
       signal(i, v);
       Serial.println(op);
       break;
+    }
+    case 'g': {
+      int i = s[1] - '0';
+      pinMode(SIGNALS[i], INPUT);
+      Serial.println(String(digitalRead(SIGNALS[i])));
+      break;
+    }
     case 'z':
       releaseSignals();
       Serial.println(op);

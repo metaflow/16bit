@@ -12,7 +12,7 @@ const int BUS[] = {4,  5,  6,      7,      8,      9,      10,     11,
                    12, 3, PIN_A0, PIN_A1, PIN_A2, PIN_A3, PIN_A4, PIN_A5};
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(57600);
   for (int i = 0; i < BUS_SIZE; i++) { pinMode(BUS[i], INPUT); }
 }
 
@@ -54,20 +54,21 @@ void loop() {
         for (int i = 0; i < BUS_SIZE; i++) pinMode(BUS[i], OUTPUT);
       }
       uint16_t val = s.substring(1).toInt();
-      for (int i = 0; i < BUS_SIZE; i++) {
-        digitalWrite(BUS[i], (val & (1 << i)) != 0);
+      for (long i = 0; i < BUS_SIZE; i++) {
+        digitalWrite(BUS[i], (val & (long(1) << i)) != 0);
       }
       break;
     }
     case 'x':
-      if (last_op != op)
+      if (last_op != op) {
         for (int i = 0; i < BUS_SIZE; i++) pinMode(BUS[i], INPUT);
+      }
       Serial.println(op);
       break;
     case 'r': {
       for (int i = 0; i < BUS_SIZE; i++) pinMode(BUS[i], INPUT);
       uint16_t val = 0;
-      for (int i = 0; i < BUS_SIZE; i++) { val += (digitalRead(BUS[i])) << i; }
+      for (int i = 0; i < BUS_SIZE; i++) { val += long(digitalRead(BUS[i])) << i; }
       Serial.println(String(val));
       break;
     }

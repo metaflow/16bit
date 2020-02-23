@@ -3,7 +3,8 @@
 deactivate
 
 deps() {
-    pip3 install pyserial
+    pip3 install --upgrade pip
+    pip3 install pyserial tabulate
     echo installing modules
 }
 
