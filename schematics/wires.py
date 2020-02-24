@@ -10,7 +10,7 @@ import xml.dom.minidom
 import xml.etree.ElementTree
 
 def dist(x1, y1, x2, y2):
-    return math.ceil(((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5 / 9.0 * (0.1 * 25.4))
+    return round(((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5 / 9.0 * (0.1 * 25.4))
 
 if len(sys.argv) < 2:
     print("provide a .fzz file")
