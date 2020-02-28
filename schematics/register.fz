@@ -10098,7 +10098,7 @@
                     <wireExtras mils="22.2222" color="#ffffff" opacity="1" banded="0">
                         <bezier>
                             <cp0 x="0" y="0"/>
-                            <cp1 x="-177.167" y="-122.455"/>
+                            <cp1 x="-130.157" y="-48.3674"/>
                         </bezier>
                     </wireExtras>
                     <connectors>
@@ -10988,7 +10988,7 @@
                     <wireExtras mils="22.2222" color="#ffffff" opacity="1" banded="0">
                         <bezier>
                             <cp0 x="65.2569" y="-40.6641"/>
-                            <cp1 x="107.91" y="-96.4062"/>
+                            <cp1 x="117.307" y="-23.9408"/>
                         </bezier>
                     </wireExtras>
                     <connectors>
@@ -11992,7 +11992,12 @@
             <views>
                 <breadboardView layer="breadboardWire">
                     <geometry z="4.00097" x="422.982" y="98.9994" x1="0" y1="0" x2="-207" y2="18.0038" wireFlags="64"/>
-                    <wireExtras mils="22.2222" color="#ffffff" opacity="1" banded="0"/>
+                    <wireExtras mils="22.2222" color="#ffffff" opacity="1" banded="0">
+                        <bezier>
+                            <cp0 x="0" y="0"/>
+                            <cp1 x="-84.4077" y="-13.8194"/>
+                        </bezier>
+                    </wireExtras>
                     <connectors>
                         <connector connectorId="connector1" layer="breadboardWire">
                             <geometry x="0" y="0"/>
