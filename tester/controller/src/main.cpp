@@ -16,7 +16,7 @@ Each command responds with a line.
 
 SoftwareSerial port(3 /* rx */, 4 /* tx */);
 
-const int           CLK = 13;
+const int           CLK = 12;
 const int           BTN = 2;
 const int           BUS_SIZE = 16;
 const int           SIGNALS_SIZE = 5;
@@ -46,6 +46,12 @@ void releaseSignals() {
   for (int i = 0; i < SIGNALS_SIZE; i++) pinMode(SIGNALS[i], INPUT);
 }
 
+void signal(uint8_t i, uint8_t v) {
+  pinMode(SIGNALS[i], OUTPUT);
+  digitalWrite(SIGNALS[i], v);
+}
+
+
 void setup() {
   Serial.begin(serial_speed);
   port.begin(serial_speed);
@@ -55,6 +61,8 @@ void setup() {
   pinMode(BTN, INPUT_PULLUP);
   releaseSignals();
   releaseBus();
+  signal(0, 1);
+  signal(1, 1);
   Serial.println("Initialized");
 }
 
@@ -75,15 +83,6 @@ uint16_t readBus() {
 }
 
 void writeBus(uint16_t x) { driver('w', x); }
-
-void signal(uint8_t i, uint8_t v) {
-  if (v == 2) {
-    pinMode(SIGNALS[i], INPUT);
-  } else {
-    pinMode(SIGNALS[i], OUTPUT);
-    digitalWrite(SIGNALS[i], v);
-  }
-}
 
 void next() {
   uint16_t v = 0;

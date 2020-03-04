@@ -55,7 +55,7 @@ if len(sys.argv) < 3:
     sys.exit(1)
 
 ctrl = Ctrl(sys.argv[2])
-
+# ctrl.verbose = True
 # wait for "initialized"
 time.sleep(0.5)
 while True:
@@ -83,14 +83,14 @@ def registerRw(x):
     noe = 0
     nw = 1
     ctrl.setBus(x)
-    # time.sleep(0.05)
     ctrl.signal(nw,0)
+    # time.sleep(0.1)
     ctrl.clock()
     ctrl.signal(nw,1)
     ctrl.releaseBus()
     ctrl.signal(noe, 0)
+    # time.sleep(0.1)
     b = ctrl.readBus()
-    # time.sleep(0.05)
     ctrl.signal(noe, 1)
     print("wrote {0:#06x} {0:#018b} got {1:#06x} {1:#018b} {2}".format(x, b, "OK" if x == b else "FAILED"))
 
@@ -99,6 +99,7 @@ def register():
     nw = 1
     probe = 2
     print("oe=0 w=0")
+    # ctrl.verbose = True
     ctrl.signal(noe, 1)
     ctrl.signal(nw, 1)
     m = (2 ** 16) - 1
