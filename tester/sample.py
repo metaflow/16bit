@@ -4,6 +4,7 @@ import sys
 import os
 import serial
 import time
+import random
 
 class Ctrl:
     def __init__(self, port):
@@ -13,7 +14,7 @@ class Ctrl:
     def readLine(self):
         return self.ser.readline().decode('utf-8').replace('\r', '').replace('\n','')
 
-    def send(self, s):
+    def read(self, s):
         self.ser.write(bytes(s + '\n', 'utf-8'))
         if self.verbose:
             print("<-", s)
@@ -24,27 +25,29 @@ class Ctrl:
         if self.verbose:
             print("->", o)
         return o
+    
+    def send(self, s):
+        self.ser.write(bytes(s + '\n', 'utf-8'))
+        if self.verbose:
+            print("<-", s)
 
     def signal(self, a, b):
         self.send('s{}{}'.format(a, b))
 
     def readSignal(self, a):
-        return self.send('g{}'.format(a))
+        return self.read('g{}'.format(a))
 
     def releaseBus(self):
-        self.send('x')
+        self.read('x')
 
     def releaseSignals(self):
-        self.send('z')
+        self.read('z')
 
     def setBus(self, x):
         self.send('w{}'.format(x))
-    
-    def setBusAndClock(self, x):
-        self.send('W{}'.format(x))
 
     def readBus(self):
-        return int(self.send('r'))
+        return int(self.read('r'))
 
     def clock(self):
         self.send('c1')
@@ -84,12 +87,12 @@ def registerRw(x):
     nw = 1
     ctrl.setBus(x)
     ctrl.signal(nw,0)
-    # time.sleep(0.1)
+    time.sleep(0.1)
     ctrl.clock()
     ctrl.signal(nw,1)
     ctrl.releaseBus()
     ctrl.signal(noe, 0)
-    # time.sleep(0.1)
+    time.sleep(0.1)
     b = ctrl.readBus()
     ctrl.signal(noe, 1)
     print("wrote {0:#06x} {0:#018b} got {1:#06x} {1:#018b} {2}".format(x, b, "OK" if x == b else "FAILED"))
@@ -98,23 +101,24 @@ def register():
     noe = 0
     nw = 1
     probe = 2
-    print("oe=0 w=0")
+    # print("oe=0 w=0")
     # ctrl.verbose = True
     ctrl.signal(noe, 1)
     ctrl.signal(nw, 1)
     m = (2 ** 16) - 1
 
-    while(1):
+    while True:
         for i in range(0, 16):
             registerRw(2 ** i)
-            # ctrl.setBus(2 ** i - 1)
-            # ctrl.releaseBus()
         for i in range(0, 17):
             registerRw(2 ** i - 1)
+        for i in range(100):
+            registerRw(random.randint(0, 2 ** 16 - 1))
         registerRw(0)
-        input()
+        # input()
 
 register()
+# test()
 # ctrl.signal(0, 1)
 # ctrl.signal(1, 1)
 # ctrl.signal(2, 1)
