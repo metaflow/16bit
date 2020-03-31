@@ -9,13 +9,15 @@ from tabulate import tabulate
 import xml.dom.minidom
 import xml.etree.ElementTree
 
-PIN = 0.1 * 25.4 # distance between two close pins 0.1 inches.
+PIN = 0.1 * 25.4  # distance between two close pins 0.1 inches.
+
 
 def dist(x1, y1, x2, y2):
     return round(((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5 / 9.0 * PIN)
 
+
 if len(sys.argv) < 2:
-    print("provide a .fzz file")
+    print("provide a .fz file")
     exit(1)
 print(sys.argv[1])
 fz = sys.argv[1]
@@ -23,15 +25,15 @@ fz = sys.argv[1]
 root = xml.etree.ElementTree.parse(fz).getroot()
 
 properties = {
-    '#418dd9': { 'color': 'blue' }, 
-    '#cc1414': { 'color': 'red'  }, 
-    '#fff800': { 'color': 'yellow', 'overIC': True, 'overWire': True }, 
-    '#fff800': { 'color': 'yellow', 'overIC': True, 'overWire': True }, 
-    '#ef6100': { 'color': 'orange'},
-    '#25cc35': { 'color': 'green', 'overIC': True },
-    '#ffffff': { 'color': 'white', 'level': 2 },
-    '#404040': { 'color': 'black' },
-    '#33ffc5': { 'color': 'cyan', 'level': 1 }
+    '#418dd9': {'color': 'blue'},
+    '#cc1414': {'color': 'red'},
+    '#fff800': {'color': 'yellow', 'overIC': True, 'overWire': True},
+    '#ef6100': {'color': 'orange'},
+    '#25cc35': {'color': 'green', 'overIC': True},
+    '#ffffff': {'color': 'white', 'level': 2},
+    '#404040': {'color': 'black'},
+    '#33ffc5': {'color': 'cyan', 'level': 1},
+    '#fa50e6': {'color': 'pink', 'level': 4},
 }
 points = {}
 edges = {}
@@ -56,7 +58,7 @@ for e in root.findall('instances/instance[@moduleIdRef="WireModuleID"]'):
         points[p1] = {'edges': [], 'x': x1, 'y': y1, 'color': color}
     points[p1]['edges'].append(name)
     if not p2 in points:
-        points[p2] =  {'edges': [], 'x': x2, 'y': y2, 'color': color}
+        points[p2] = {'edges': [], 'x': x2, 'y': y2, 'color': color}
     points[p2]['edges'].append(name)
     pins = [a.get('connectorId') for a in v.findall('connectors/connector/connects/connect')]
     pins = [x.replace('pin', '') for x in pins if x.startswith('pin')]
@@ -78,7 +80,7 @@ for k in points.keys():
         t = None
         visited[k] = True
         p = points[k]
-        path.append((p['x'], p['y'])) #TODO
+        path.append((p['x'], p['y']))  # TODO
         for e in p['edges']:
             if e == prev_e:
                 continue
@@ -138,6 +140,7 @@ tbl = []
 for w in wires:
     tbl.append([
         w['cut'],
+        w['cut'] - 16,
         w['color'],
         ''.join([str(x) for x in w['pins'][0]]),
         ''.join([str(x) for x in w['pins'][1]]),

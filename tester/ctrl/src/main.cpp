@@ -14,9 +14,9 @@ Each command responds with a line.
  */
 
 
-const int           CLK = 2;
-const int           SIGNALS_SIZE = 5;
-const int           SIGNALS[SIGNALS_SIZE] = {3, 4, 5, 6, 7};
+const int           CLK = 52;
+const int           SIGNALS_SIZE = 6;
+const int           SIGNALS[SIGNALS_SIZE] = {50, 48, 46, 44, 42, 40};
 const unsigned long serial_speed = 57600;
 const int BUS_SIZE = 16;
 const int BUS[] = {53, 51, 49, 47, 45, 43, 41, 39, 37, 35, 33, 31, 29, 27, 25, 23};
