@@ -1,28 +1,50 @@
-var gulp = require('gulp');
-// var sourcemaps = require('gulp-sourcemaps');
-var browserify = require('browserify');
-var source = require('vinyl-source-stream');
-var tsify = require('tsify');
-var fancy_log = require('fancy-log');
+var gulp = require('gulp'),
+    browserify = require('browserify'),
+    source = require('vinyl-source-stream'),
+    tsify = require('tsify'),
+    fancy_log = require('fancy-log'),
+    watchify = require("watchify"),
+    gutil = require("gulp-util"),
+    wait = require("gulp-wait"),
+    livereload = require('gulp-livereload');
 
 var br = browserify({
-  basedir: '.',
-  debug: true, // Setting to false removes the source mapping data.
-  entries: [
-    // TS files to transpile and bundle.
-    'client/editor.ts',
-  ],
-  cache: {},
-  packageCache: {}
+    basedir: '.',
+    debug: true, // Setting to false removes the source mapping data.
+    entries: [
+        // TS files to transpile and bundle.
+        'client/editor.ts',
+    ],
+    cache: {},
+    packageCache: {}
 }).plugin(tsify);
 
+var watch = watchify(br);
+watch.on("update", watch_bundle);
+watch.on("log", gutil.log);
 
 function bundle() {
-  return br
-    .bundle()
-    .on('error', fancy_log)
-    .pipe(source('bundle.js'))
-    .pipe(gulp.dest('./public/javascripts'));
+    return br
+        .bundle()
+        .on('error', fancy_log)
+        .pipe(source('bundle.js'))
+        .pipe(gulp.dest('./public/javascripts'));
+}
+
+function watch_bundle() {
+    return br
+        .bundle()
+        .on('error', fancy_log)
+        .pipe(source('bundle.js'))
+        .pipe(gulp.dest('./public/javascripts'))
+        .pipe(wait(1000))
+        .pipe(livereload());
 }
 
 gulp.task('default', bundle);
+gulp.task('bundle', bundle);
+gulp.task('watch', function() {
+    livereload.listen();
+    // watch_bundle();
+    gulp.watch('client/*.ts', watch_bundle);
+});
