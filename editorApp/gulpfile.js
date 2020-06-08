@@ -32,7 +32,7 @@ function bundle() {
 }
 
 function watch_bundle() {
-    return br
+    return watch
         .bundle()
         .on('error', fancy_log)
         .pipe(source('bundle.js'))
@@ -45,6 +45,6 @@ gulp.task('default', bundle);
 gulp.task('bundle', bundle);
 gulp.task('watch', function() {
     livereload.listen();
-    // watch_bundle();
-    gulp.watch('client/*.ts', watch_bundle);
+    watch_bundle();
+    // gulp.watch('client/*.ts', watch_bundle);
 });
