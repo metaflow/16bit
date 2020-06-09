@@ -40,7 +40,11 @@ export class MoveWireEndAction implements Action {
     mousedown(event:  Konva.KonvaEventObject<MouseEvent>): boolean {
       return true;
     }
+    mouseup(event: import("konva/types/Node").KonvaEventObject<MouseEvent>): boolean {
+        return false;
+    }
     cancel(): void {
       this.undo();
     }
+
   }

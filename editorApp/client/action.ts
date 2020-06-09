@@ -7,6 +7,7 @@ export interface Action {
     undo(): void;
     mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean;
     mousedown(event: Konva.KonvaEventObject<MouseEvent>): boolean;
+    mouseup(event: Konva.KonvaEventObject<MouseEvent>): boolean;
     cancel(): void;
     serialize(): string;
 }
@@ -25,11 +26,17 @@ export class Actions {
         if (this.current()?.mousedown(event)) this.commit();
         return true;
     }
+    onMouseUp(event: Konva.KonvaEventObject<MouseEvent>) {
+        if (this.current() == null) return false;
+        if (this.current()?.mouseup(event)) this.commit();
+        return true;
+    }
     onMouseMove(event: Konva.KonvaEventObject<MouseEvent>): boolean {
         if (this.current() == null) return false;
         if (this.current()?.mousemove(event)) this.commit();
         return true;
     }
+
     commit() {
         const a = this.current();
         if (a == null) return;

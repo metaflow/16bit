@@ -6,6 +6,7 @@ import {AddWireAction} from './add_wire_action';
 import {stage, addBreadboard} from './stage';
 import { Breadboard } from './breadboard';
 import { addAddressRoot } from './address';
+import { SelectAction } from './select_action';
 
 // first we need to create a stage
 stage(new Konva.Stage({
@@ -17,28 +18,28 @@ stage(new Konva.Stage({
 // then create layer
 var layer = new Konva.Layer();
 stage()?.add(layer);
+// Background color.
 layer.add(new Konva.Rect({
   x: 0, y: 0, width: 1000, height: 1000, fill: '#FAFAFA',
 }))
-layer.draw();
-
-function alignToGrid(x: number, y: number) {
-  const g = 20;
-  x = Math.round(x / g) * g;
-  y = Math.round(y / g) * g;
-  return [x, y];
-}
 
 stage()?.on('mousemove', function (e: Konva.KonvaEventObject<MouseEvent>) {
   if (appActions.onMouseMove(e)) layer.draw();
 });
 
 stage()?.on('mousedown', function(e) {
-  const mousePos = stage()?.getPointerPosition();
-  if (mousePos == null) return false;
-  if (appActions.onMouseDown(e)) {
+  if (appActions.onMouseDown(e)) { 
     layer.draw();
- }
+    return;
+  }
+  appActions.current(new SelectAction(layer));
+}); 
+
+stage()?.on('mouseup', function(e) {
+  if (appActions.onMouseUp(e)) { 
+    layer.draw();
+    return;
+  }
 }); 
 
 hotkeys('esc', function(e) {  

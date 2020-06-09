@@ -13,14 +13,26 @@ export function addAddressRoot(r: Addressable) {
     roots.set(r.id(), r);
 }
 
-export function getByAddress(address: string): Addressable|null {
+export function getByAddress(address: string): any|null {
     const parts = address.split(':');
-    let t: Addressable|null|undefined = roots.get(parts[0]); 
+    let t: Addressable|null|undefined = roots.get(parts[0]);
+    if (t == null) {
+        console.error('address root', parts[0], 'not found', address);
+    }
     for (let i = 1; i < parts.length && t != null; i++)     {
         t = t.addressChild(parts[i]);
+        if (t == null) {
+            console.error('address child', parts[i], 'not found', address);
+        }
     }
     if (t === undefined) return null;
     return t;
+}
+
+let _nextAddress = 0
+export function newAddress(): string {
+    _nextAddress++;
+    return "" + _nextAddress;
 }
 
 export function address(a: Addressable|null): string {

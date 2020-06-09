@@ -1,5 +1,4 @@
 select wire end
-remember actions and replay between reloads
 select multiple wire ends
 move by delta
 add breadboard

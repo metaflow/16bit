@@ -1,12 +1,25 @@
 import Konva from 'konva';
 import { Contact, Breadboard } from './breadboard';
 
-let _stage: Konva.Stage|null = null;
+let _stage: Konva.Stage | null = null;
 let breadboards: Breadboard[] = [];
 
-export function stage(s?: Konva.Stage): Konva.Stage|null {
+function alignToGrid(x: number, y: number) {
+    const g = 20;
+    x = Math.round(x / g) * g;
+    y = Math.round(y / g) * g;
+    return [x, y];
+}
+
+export function stage(s?: Konva.Stage): Konva.Stage | null {
     if (s !== undefined) _stage = s;
     return _stage;
+}
+
+export function getCursorPosition() {
+    let pos = stage()?.getPointerPosition(); 
+    if (pos == null) throw new Error('Cannot get pointer position');
+    return pos;
 }
 
 export function magnification(): number { // TODO: use toScreen()
@@ -31,8 +44,8 @@ export function distance(c: [number, number, number, number]): number {
     return Math.sqrt(dx * dx + dy * dy);
 }
 
-export function closesetContact(xy: [number, number]): Contact|null {
-    let z: Contact|null = null;
+export function closesetContact(xy: [number, number]): Contact | null {
+    let z: Contact | null = null;
     let dz = 0;
     for (const b of breadboards) {
         b.contacts.forEach(c => {
@@ -41,7 +54,7 @@ export function closesetContact(xy: [number, number]): Contact|null {
                 z = c;
                 dz = d;
             }
-        });       
+        });
     }
     return z;
 }

@@ -4,7 +4,7 @@ import { Action, appActions } from './action';
 import {MoveWireEndAction} from './move_wire_end_action';
 import {stage, toPhysical, closesetContact, toScreen} from './stage';
 import { Contact } from './breadboard';
-import { address, getByAddress } from './address';
+import { address, getByAddress, newAddress, addAddressRoot } from './address';
 
 export class AddWireAction implements Action {
     actionType = "AddWireAction";
@@ -59,6 +59,10 @@ export class AddWireAction implements Action {
         return true;
     }
 
+    mouseup(event: import("konva/types/Node").KonvaEventObject<MouseEvent>): boolean {
+        return false;
+    }
+
     cancel(): void {
         if (this.wire == null) return;
         this.wire.remove(this.layer);
@@ -96,6 +100,9 @@ export class AddContactWireAction implements Action {
             lineJoin: 'round',
         });
         this.layer.add(this.line);
+    }
+    mouseup(event: import("konva/types/Node").KonvaEventObject<MouseEvent>): boolean {
+        return false;
     }
     serialize(): string {
         return JSON.stringify({
@@ -145,6 +152,8 @@ export class AddContactWireAction implements Action {
     private complete(c2: Contact) {
         this.c2 = c2;
         this.wire = new ContactWire(this.c1, c2);
+        this.wire.id(newAddress());
+        addAddressRoot(this.wire); // TODO: remove root when whire is removed.
         this.wire.add(this.layer);
         this.line.remove();        
     }

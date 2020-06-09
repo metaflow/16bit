@@ -1,6 +1,8 @@
 import Konva from 'konva';
 import { Contact } from './breadboard';
 import { magnification, toScreen } from './stage';
+import { Addressable, address, newAddress } from './address';
+import { Selectable } from './select_action';
 
 export class Wire {
     ends: Konva.Circle[];
@@ -56,14 +58,70 @@ export class Wire {
     }
 }
 
-export class ContactWire {
-    line: Konva.Line;
-    selections: Konva.Rect[] = [];
-    contacts: Contact[] = [];
+export class WireEnd implements Addressable, Selectable {
+    _id = "";
+    wire: ContactWire;
+    contact: Contact;
+    selectionRect: Konva.Rect;
+    _selected: boolean = false;
+    constructor(wire: ContactWire, c: Contact) {
+        this.wire = wire;
+        this.contact = c;
+        this.selectionRect = new Konva.Rect({
+            dash: [1, 1],
+            stroke: 'black',
+            name: 'selectable',
+        });
+        this.update();
+    }
+    selectableInterface: true = true;
+    id(newID?: string): string {
+        if (newID !== undefined) {
+            this._id = newID;
+            this.update();
+        }
+        return this._id;
+    }
+    addressParent(): Addressable | null {
+        return this.wire;
+    }
+    addressChild(id: string): Addressable | null | undefined {
+        return null;
+    }
+    update() {
+        const w = 3;
+        let xy = toScreen(this.contact.x()-w/2, this.contact.y()-w/2);
+        this.selectionRect.x(xy[0]);
+        this.selectionRect.y(xy[1]);
+        this.selectionRect.width(w * magnification());
+        this.selectionRect.height(w * magnification());
+        this.selectionRect.attrs['address'] = address(this);
+        this.selectionRect.stroke(this.selected() ? 'red' : 'black');
+    }
+    add(layer: Konva.Layer) {
+        layer.add(this.selectionRect);
+    }
+    remove() {
+        this.selectionRect.remove();
+    }
+    selected(v?: boolean): boolean {
+        if (v !== undefined) {
+            this._selected = true;
+            this.update();
+        }
+        return this._selected;
+    }
+}
 
+export class ContactWire implements Addressable {
+    line: Konva.Line;
+    ends: WireEnd[] = [];
+    _id = "";
     constructor(c1: Contact, c2: Contact) {
-        this.contacts.push(c1);
-        this.contacts.push(c2);
+        this.ends.push(new WireEnd(this, c1));
+        this.ends[0].id("0");
+        this.ends.push(new WireEnd(this, c2));        
+        this.ends[1].id("1");
         this.line = new Konva.Line({
             points: [],
             stroke: 'blue',
@@ -71,47 +129,48 @@ export class ContactWire {
             lineCap: 'round',
             lineJoin: 'round',
         });
-        for (let i = 0; i < 2; i++) {
-            this.selections.push(new Konva.Rect({
-                dash: [1, 1],
-                stroke: 'black',
-            }));
-        }
         this.update();
+    }
+    id(newID?: string): string {
+        if (newID !== undefined) {
+            this._id = newID;
+            this.update();
+        }
+        return this._id;
+    }
+    addressParent(): Addressable | null {
+        return null;
+    }
+    addressChild(id: string): Addressable | null | undefined {
+        let x = parseInt(id);
+        if (x < 0 || x > 1) return null;
+        return this.end(x);
     }
 
     add(layer: Konva.Layer) {
         layer.add(this.line);
-        for (const s of this.selections) layer.add(s);
+        for (const s of this.ends) s.add(layer);
     }
 
     remove() {
         this.line.remove();
-        for (const s of this.selections) s.remove();
+        for (const s of this.ends) s.remove();
     }
 
     update() {
-        this.line.points([
-            this.contacts[0].x() * magnification(),
-            this.contacts[0].y() * magnification(),
-            this.contacts[1].x() * magnification(),
-            this.contacts[1].y() * magnification()]);
+        const [x0, y0] = toScreen(this.ends[0].contact.x(), this.ends[0].contact.y());
+        const [x1, y1] = toScreen(this.ends[1].contact.x(), this.ends[1].contact.y());
+        this.line.points([x0, y0, x1, y1]);
         this.line.strokeWidth(1 * magnification());
-        for (let i = 0; i < 2; i++) {
-            const w = 3;
-            let xy = toScreen(this.contacts[i].x()-w/2, this.contacts[i].y()-w/2);
-            this.selections[i].x(xy[0]);
-            this.selections[i].y(xy[1]);
-            this.selections[i].width(w * magnification());
-            this.selections[i].height(w * magnification());
-        }
+        this.ends[0].update();
+        this.ends[1].update();
     }
 
-    end(i: number, c?: Contact): Contact {
+    end(i: number, c?: Contact): WireEnd {
         if (c !== undefined) {
-            this.contacts[i] = c;
+            this.ends[i].contact = c; // TODO: setter
             this.update();
         }
-        return this.contacts[i];
+        return this.ends[i];
     }
 }
