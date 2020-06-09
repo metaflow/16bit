@@ -4,6 +4,7 @@ import Konva from 'konva';
 import {stage} from './stage';
 
 export class MoveWireEndAction implements Action {
+    actionType = "MoveWireEndAction";
     wire: Wire;
     endIndex: number;
     x0: number;
@@ -15,6 +16,12 @@ export class MoveWireEndAction implements Action {
       this.endIndex = endIndex;
       [this.x0, this.y0] = this.wire.end(endIndex);
       [this.x1, this.y1] = [this.x0, this.y0];
+    }
+    serialize(): string {
+        throw new Error("Method not implemented.");
+    }
+    deserialize(data: string): void {
+        throw new Error("Method not implemented.");
     }
     apply(): void {
       this.wire.end(this.endIndex, this.x1, this.y1);

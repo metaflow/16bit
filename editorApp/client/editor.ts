@@ -5,6 +5,7 @@ import {appActions} from './action';
 import {AddWireAction} from './add_wire_action';
 import {stage, addBreadboard} from './stage';
 import { Breadboard } from './breadboard';
+import { addAddressRoot } from './address';
 
 // first we need to create a stage
 stage(new Konva.Stage({
@@ -62,7 +63,11 @@ hotkeys('ctrl+shift+z', function(e) {
 });
 
 let bb = new Breadboard(layer, 10, 10);
+bb.id('bb1');
 bb.add(layer);
 addBreadboard(bb);
+addAddressRoot(bb);
+
+appActions.load(layer);
 
 layer.draw();

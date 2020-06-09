@@ -35,13 +35,13 @@ export function closesetContact(xy: [number, number]): Contact|null {
     let z: Contact|null = null;
     let dz = 0;
     for (const b of breadboards) {
-        for (const c of b.contacts) {
+        b.contacts.forEach(c => {
             const d = distance([c!.x(), c!.y(), xy[0], xy[1]]);
             if (z == null || d < dz) {
                 z = c;
                 dz = d;
             }
-        }
+        });       
     }
     return z;
 }

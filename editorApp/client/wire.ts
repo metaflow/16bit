@@ -1,6 +1,6 @@
 import Konva from 'konva';
 import { Contact } from './breadboard';
-import { magnification } from './stage';
+import { magnification, toScreen } from './stage';
 
 export class Wire {
     ends: Konva.Circle[];
@@ -58,7 +58,8 @@ export class Wire {
 
 export class ContactWire {
     line: Konva.Line;
-    contacts: Contact[] = [];    
+    selections: Konva.Rect[] = [];
+    contacts: Contact[] = [];
 
     constructor(c1: Contact, c2: Contact) {
         this.contacts.push(c1);
@@ -66,19 +67,27 @@ export class ContactWire {
         this.line = new Konva.Line({
             points: [],
             stroke: 'blue',
-            strokeWidth: 3,
+            strokeWidth: 1,
             lineCap: 'round',
             lineJoin: 'round',
         });
+        for (let i = 0; i < 2; i++) {
+            this.selections.push(new Konva.Rect({
+                dash: [1, 1],
+                stroke: 'black',
+            }));
+        }
         this.update();
     }
 
     add(layer: Konva.Layer) {
         layer.add(this.line);
+        for (const s of this.selections) layer.add(s);
     }
 
-    remove(layer: Konva.Layer) {
-        this.line.remove();        
+    remove() {
+        this.line.remove();
+        for (const s of this.selections) s.remove();
     }
 
     update() {
@@ -87,6 +96,15 @@ export class ContactWire {
             this.contacts[0].y() * magnification(),
             this.contacts[1].x() * magnification(),
             this.contacts[1].y() * magnification()]);
+        this.line.strokeWidth(1 * magnification());
+        for (let i = 0; i < 2; i++) {
+            const w = 3;
+            let xy = toScreen(this.contacts[i].x()-w/2, this.contacts[i].y()-w/2);
+            this.selections[i].x(xy[0]);
+            this.selections[i].y(xy[1]);
+            this.selections[i].width(w * magnification());
+            this.selections[i].height(w * magnification());
+        }
     }
 
     end(i: number, c?: Contact): Contact {
@@ -94,6 +112,6 @@ export class ContactWire {
             this.contacts[i] = c;
             this.update();
         }
-        return this.contacts[i];        
+        return this.contacts[i];
     }
 }
