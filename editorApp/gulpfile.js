@@ -20,8 +20,6 @@ var br = browserify({
 }).plugin(tsify);
 
 var watch = watchify(br);
-watch.on("update", watch_bundle);
-watch.on("log", gutil.log);
 
 function bundle() {
     return br
@@ -44,6 +42,8 @@ function watch_bundle() {
 gulp.task('default', bundle);
 gulp.task('bundle', bundle);
 gulp.task('watch', function() {
+    watch.on("update", watch_bundle);
+    watch.on("log", gutil.log);
     livereload.listen();
     watch_bundle();
     // gulp.watch('client/*.ts', watch_bundle);
