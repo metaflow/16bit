@@ -1,5 +1,19 @@
+add IC
+- rectangle
+- ends with contacts
+- selection
+- move
 select wire end
 select multiple wire ends
 move by delta
 add breadboard
 move breadboard (one in relation to another)
+
+scenario:
+- make schematics in one of the open editors OR draw it here
+- export / import into editor
+- pick parts and put them on the breadboard
+- auto create wires between components (maybe only selected ones)
+- moving part will auto-move wires
+- wires can be moved
+- mark connections that does not exist / missing on schematic
