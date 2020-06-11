@@ -39,7 +39,7 @@ export function address(a: Addressable|null): string {
     if (a === null) return "";
     let z = a.id();
     let t = a.addressParent()
-    while (t !== null) {
+    while (t != null) {
         z = t.id() + ':' + z;
         t = t.addressParent();
     }

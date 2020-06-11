@@ -1,8 +1,8 @@
 import Konva from 'konva';
-import { Contact } from './breadboard';
-import { magnification, toScreen } from './stage';
-import { Addressable, address, newAddress } from './address';
-import { Selectable } from './select_action';
+import { Contact } from './contact';
+import { magnification, toScreen } from '../stage';
+import { Addressable, address, newAddress } from '../address';
+import { Selectable } from '../actions/select_action';
 
 export class Wire {
     ends: Konva.Circle[];

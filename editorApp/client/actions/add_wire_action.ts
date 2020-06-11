@@ -1,10 +1,10 @@
 import Konva from 'konva';
-import { Wire, ContactWire } from './wire';
-import { Action, appActions } from './action';
+import { Wire, ContactWire } from '../components/wire';
+import { Action, appActions } from '../action';
 import {MoveWireEndAction} from './move_wire_end_action';
-import {stage, toPhysical, closesetContact, toScreen} from './stage';
-import { Contact } from './breadboard';
-import { address, getByAddress, newAddress, addAddressRoot } from './address';
+import {stage, toPhysical, closesetContact, toScreen} from '../stage';
+import { Contact } from '../components/contact';
+import { address, getByAddress, newAddress, addAddressRoot } from '../address';
 
 export class AddWireAction implements Action {
     actionType = "AddWireAction";
@@ -80,6 +80,8 @@ export class AddWireAction implements Action {
     }
 }
 
+
+// TODO: move to a separate file.
 export class AddContactWireAction implements Action {
     actionType = "AddContactWireAction";
     wire: ContactWire | null = null;

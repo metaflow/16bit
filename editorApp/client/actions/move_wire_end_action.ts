@@ -1,7 +1,7 @@
-import {Action} from './action';
-import {Wire} from './wire';
+import {Action} from '../action';
+import {Wire} from '../components/wire';
 import Konva from 'konva';
-import {stage} from './stage';
+import {stage} from '../stage';
 
 export class MoveWireEndAction implements Action {
     actionType = "MoveWireEndAction";

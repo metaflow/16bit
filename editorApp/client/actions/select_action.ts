@@ -1,7 +1,7 @@
-import { Action } from "./action";
+import { Action } from "../action";
 import Konva from "konva";
-import { stage, getCursorPosition } from "./stage";
-import { getByAddress } from "./address";
+import { stage, getCursorPosition } from "../stage";
+import { getByAddress } from "../address";
 
 export interface Selectable {
     selectableInterface: true;

@@ -1,5 +1,5 @@
 import Konva from 'konva';
-import { AddContactWireAction } from './add_wire_action';
+import { AddContactWireAction } from './actions/add_wire_action';
 
 export interface Action {
     actionType: string;

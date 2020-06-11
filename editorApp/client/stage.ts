@@ -1,8 +1,9 @@
 import Konva from 'konva';
-import { Contact, Breadboard } from './breadboard';
+import { Breadboard } from './components/breadboard';
+import { Contact } from './components/contact';
+import { address } from './address';
 
 let _stage: Konva.Stage | null = null;
-let breadboards: Breadboard[] = [];
 
 function alignToGrid(x: number, y: number) {
     const g = 20;
@@ -17,7 +18,7 @@ export function stage(s?: Konva.Stage): Konva.Stage | null {
 }
 
 export function getCursorPosition() {
-    let pos = stage()?.getPointerPosition(); 
+    let pos = stage()?.getPointerPosition();
     if (pos == null) throw new Error('Cannot get pointer position');
     return pos;
 }
@@ -34,9 +35,12 @@ export function toPhysical(x: number, y: number): [number, number] {
     return [x / magnification(), y / magnification()];
 }
 
-export function addBreadboard(b: Breadboard) {
-    breadboards.push(b);
+const contacts = new Map<string, Contact>();
+export function addContact(c: Contact) {
+    contacts.set(address(c), c);
 }
+
+// TODO: remove contact.
 
 export function distance(c: [number, number, number, number]): number {
     const dx = c[0] - c[2];
@@ -47,14 +51,12 @@ export function distance(c: [number, number, number, number]): number {
 export function closesetContact(xy: [number, number]): Contact | null {
     let z: Contact | null = null;
     let dz = 0;
-    for (const b of breadboards) {
-        b.contacts.forEach(c => {
-            const d = distance([c!.x(), c!.y(), xy[0], xy[1]]);
-            if (z == null || d < dz) {
-                z = c;
-                dz = d;
-            }
-        });
-    }
+    contacts.forEach(c => {
+        const d = distance([c!.x(), c!.y(), xy[0], xy[1]]);
+        if (z == null || d < dz) {
+            z = c;
+            dz = d;
+        }
+    });
     return z;
 }
