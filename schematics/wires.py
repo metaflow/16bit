@@ -80,7 +80,7 @@ for k in points.keys():
         t = None
         visited[k] = True
         p = points[k]
-        path.append((p['x'], p['y']))  # TODO
+        path.append((p['x'], p['y'])) 
         for e in p['edges']:
             if e == prev_e:
                 continue

@@ -6,6 +6,7 @@ import { Breadboard } from './components/breadboard';
 import { addAddressRoot } from './address';
 import { SelectAction } from './actions/select_action';
 import { IntegratedCircuit } from './components/integrated_circuit';
+import { IntegratedCircuitSchematic } from './components/IC_schematic';
 
 // first we need to create a stage
 stage(new Konva.Stage({
@@ -74,6 +75,15 @@ let ic = new IntegratedCircuit({
   pins: ['a', 'b', 'c', 'd', 'e', 'f', 'a', 'b', 'c', 'd', 'e', 'f'],
   label: '74AHTC155',
 })
+
+let ic2 = new IntegratedCircuitSchematic({ id: "ic2",
+x: 50,
+y: 100,
+layer,
+left_pins: ['a', 'b', 'c', 'd', 'e', 'f'],
+right_pins: ['g', 'h', 'i', 'j', 'k', 'l'],
+label: '74AHTC155'});
+ic2.add(layer);
 
 appActions.load(layer);
 

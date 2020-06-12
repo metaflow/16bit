@@ -45,7 +45,6 @@ export class IntegratedCircuit extends Component {
         }
         for (const c of this.contacts) {
             c.add(spec.layer);
-            c.setupEvents(spec.layer);
         }
         this.name = new Konva.Text({ text: spec.label, align: 'center' });
         spec.layer.add(this.name);
