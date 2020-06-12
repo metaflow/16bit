@@ -1,11 +1,23 @@
-add IC
-- rectangle
-- ends with contacts
-- selection
-- move
-select wire end
-select multiple wire ends
-move by delta
+- schematic
+    - is is possible to make two layers and move them in relation to each other?
+    - separate layer and address space for schematic
+    - schematic IC
+    - add schematic IC
+    - select IC
+    - delete IC
+    - move IC
+    - schematic wire (intiallay copy)
+    - add schematic wire
+    - select wire
+    - delete wire
+    - move wire end
+    - add bends in schematic wire
+- add IC
+    - rectangle @done
+    - selection
+    - move
+- select wire
+- delete wire
 add breadboard
 move breadboard (one in relation to another)
 

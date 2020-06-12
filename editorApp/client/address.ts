@@ -1,5 +1,5 @@
 export interface Addressable {
-    id(newID?: string): string;
+    id(): string;
     addressParent(): Addressable|null;
     addressChild(id:string): Addressable|null|undefined;
 }
@@ -8,9 +8,17 @@ const roots = new Map<string, Addressable>();
 
 export function addAddressRoot(r: Addressable) {
     if (roots.has(r.id())) {
-        throw new Error(`id ${r.id()} already in roots`);
+        throw new Error(`address root "${r.id()}" already exists`);
     }
     roots.set(r.id(), r);
+}
+
+export function removeAddressRoot(id: string) {
+    if (!roots.has(id)) {
+        console.error(`address root "${id}" does not exist`);
+        return;
+    }
+    roots.delete(id);
 }
 
 export function getByAddress(address: string): any|null {

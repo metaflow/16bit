@@ -1,6 +1,6 @@
 import { Component } from "./component";
 import Konva from "konva";
-import { toScreen, magnification } from "../stage";
+import { toScreen, scale } from "../stage";
 import { Layer } from "konva/types/Layer";
 import { addAddressRoot } from "../address";
 import { Contact } from "./contact";
@@ -38,10 +38,10 @@ export class IntegratedCircuit extends Component {
         }
         const w = Math.floor((this.pins.length + 1) / 2);
         for (let i = 0; i < w; i++) {
-            this.contacts.push(new Contact(this.pins[i], this, (i + 0.5) * contact_width + gap, height + pin_length));
+            this.contacts.push(new Contact(this.pins[i], this, spec.layer, (i + 0.5) * contact_width + gap, height + pin_length));
         }
         for (let i = w; i < this.pins.length; i++) {
-            this.contacts.push(new Contact(this.pins[i], this, (this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length));
+            this.contacts.push(new Contact(this.pins[i], this, spec.layer, (this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length));
         }
         for (const c of this.contacts) {
             c.add(spec.layer);
@@ -60,30 +60,30 @@ export class IntegratedCircuit extends Component {
         console.log('w', w);
         this.rect.x(x);
         this.rect.y(y);
-        this.rect.width((w * contact_width + gap * 2) * magnification());
-        this.rect.height(height * magnification());
+        this.rect.width((w * contact_width + gap * 2) * scale());
+        this.rect.height(height * scale());
         for (const a of this.labels) {
-            a.fontSize(label_font_size * magnification());
+            a.fontSize(label_font_size * scale());
             a.fontFamily('Monospace');
             a.align('center');
-            a.width(contact_width * magnification());
-            a.height(5 * magnification())
+            a.width(contact_width * scale());
+            a.height(5 * scale())
         }
         for (let i = 0; i < w; i++) {
-            this.labels[i].x(x + (gap + (i) * contact_width) * magnification());
-            this.labels[i].y(y + (height - gap - label_font_size) * magnification());
+            this.labels[i].x(x + (gap + (i) * contact_width) * scale());
+            this.labels[i].y(y + (height - gap - label_font_size) * scale());
         }
         for (let i = w; i < this.pins.length; i++) {
-            this.labels[i].x(x + (gap + (this.pins.length - i - 1) * contact_width) * magnification());
-            this.labels[i].y(y + gap * magnification());
+            this.labels[i].x(x + (gap + (this.pins.length - i - 1) * contact_width) * scale());
+            this.labels[i].y(y + gap * scale());
         }
         this.name.x(x);
-        this.name.y(y + ((height - label_font_size) * 0.5) * magnification());
+        this.name.y(y + ((height - label_font_size) * 0.5) * scale());
         this.name.width(this.rect.width());
-        this.name.fontSize(label_font_size * magnification());
-        this.arc.innerRadius(arc_r * magnification()); // TODO: rename 'magnification' to scale
-        this.arc.outerRadius(arc_r * magnification());
+        this.name.fontSize(label_font_size * scale());
+        this.arc.innerRadius(arc_r * scale());
+        this.arc.outerRadius(arc_r * scale());
         this.arc.x(x);
-        this.arc.y(y + height / 2 * magnification());
+        this.arc.y(y + height / 2 * scale());
     }
 }

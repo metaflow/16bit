@@ -7,6 +7,7 @@ export class Component implements Addressable {
     _y = 0;
     _x = 0;
     children = new Map<string, Component>();
+    shapes = new Konva.Group();
     constructor(id: string, parent?: Component) {
         this._id = id;
         if (parent !== undefined) {
@@ -19,6 +20,7 @@ export class Component implements Addressable {
         return this._parent;
     }
     addChild(c: Component) {
+        this.shapes.add(c.shapes);
         this.children.set(c.id(), c);
     }
     addressParent(): Addressable | null {
@@ -27,9 +29,7 @@ export class Component implements Addressable {
     addressChild(id: string): Addressable | null | undefined {
         return this.children.get(id);
     }
-    // TODO: only get value.
-    id(newID?: string): string {
-        if (newID !== undefined) this._id = newID;
+    id(): string {
         return this._id;
     }
     x(newX?: number) : number {
@@ -41,9 +41,11 @@ export class Component implements Addressable {
         return this._y;
     }
     add(layer: Konva.Layer) {
-        this.children.forEach(v => v.add(layer));
+        layer.add(this.shapes);
+        this.children.forEach(c => c.add(layer));
     }
     remove() {
+        this.shapes.remove();
         this.children.forEach(v => v.remove());
     }
 }

@@ -27,7 +27,7 @@ export class SelectAction implements Action {
         throw new Error("Method not implemented.");
     }
     mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean {
-        let pos = getCursorPosition(); // TODO: use this instead of stage method.
+        let pos = getCursorPosition();
         this.rect.width(pos.x - this.rect.x());
         this.rect.height(pos.y - this.rect.y());
         return false;

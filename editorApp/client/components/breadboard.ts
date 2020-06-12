@@ -1,5 +1,5 @@
 import Konva from 'konva';
-import { magnification } from '../stage';
+import { scale } from '../stage';
 import { appActions } from '../action';
 import { AddContactWireAction } from '../actions/add_wire_action';
 import { Addressable, address } from '../address';
@@ -25,24 +25,19 @@ export class Breadboard extends Component {
                 if (j == 2 || j == 3 || j == 9 || j == 10 || j == 16 || j == 17) continue;
                 if ((j == 0 || j == 1 || j == 18 || j == 19) &&
                     (i == 0 || ((i - 1) % 6 == 0) || i == 62)) continue;
-                const c = new Contact(letters[j] + (i + 1), this, left + i * this.p_contact, top + j * this.p_contact);
-                c.setupEvents(layer); // TODO: move to Contact contructor.
+                const c = new Contact(letters[j] + (i + 1), this, layer, left + i * this.p_contact, top + j * this.p_contact);                
                 this.contacts.set(c.id(), c);
             }
         }
         this.rect = new Konva.Rect({
-            x: x * magnification(),
-            y: y * magnification(),
-            height: this.p_height * magnification(),
-            width: this.p_width * magnification(),
+            x: x * scale(),
+            y: y * scale(),
+            height: this.p_height * scale(),
+            width: this.p_width * scale(),
             fill: '#EBEDE4',
             stroke: 'black',
             strokeWidth: 1,
-        })
-    }
-    // TODO: do that in ctor.
-    add(layer: Konva.Layer) {        
-        layer.add(this.rect);
-        super.add(layer);
+        });
+        this.shapes.add(this.rect);
     }
 }

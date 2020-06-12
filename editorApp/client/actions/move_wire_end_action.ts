@@ -1,21 +1,19 @@
 import {Action} from '../action';
-import {Wire} from '../components/wire';
 import Konva from 'konva';
-import {stage} from '../stage';
+import {stage, closesetContact, toPhysical} from '../stage';
+import { ContactWire } from '../components/wire';
+import { Contact } from '../components/contact';
 
 export class MoveWireEndAction implements Action {
     actionType = "MoveWireEndAction";
-    wire: Wire;
+    wire: ContactWire;
     endIndex: number;
-    x0: number;
-    y0: number;
-    x1: number;
-    y1: number;
-    constructor(wire: Wire, endIndex: number) {
+    from: Contact;
+    to: Contact|null = null;
+    constructor(wire: ContactWire, endIndex: number) {
       this.wire = wire;
       this.endIndex = endIndex;
-      [this.x0, this.y0] = this.wire.end(endIndex);
-      [this.x1, this.y1] = [this.x0, this.y0];
+      this.from = this.wire.end(endIndex).contact();
     }
     serialize(): string {
         throw new Error("Method not implemented.");
@@ -24,17 +22,13 @@ export class MoveWireEndAction implements Action {
         throw new Error("Method not implemented.");
     }
     apply(): void {
-      this.wire.end(this.endIndex, this.x1, this.y1);
+      if (this.to != null) this.wire.end(this.endIndex).contact(this.to);
     }
     undo(): void {
-      console.log('undo move wire end');
-      this.wire.end(this.endIndex, this.x0, this.y0);
+      this.wire.end(this.endIndex).contact(this.from);
     }
     mousemove(event:  Konva.KonvaEventObject<MouseEvent>): boolean {
-      const mousePos = stage()?.getPointerPosition();
-      if (mousePos == null) return false;
-      [this.x1, this.y1] = [mousePos.x, mousePos.y]; 
-      this.apply();
+      this.to = closesetContact();
       return false;
     }
     mousedown(event:  Konva.KonvaEventObject<MouseEvent>): boolean {

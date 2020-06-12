@@ -3,28 +3,26 @@ import Konva from "konva";
 import { appActions } from "../action";
 import { AddContactWireAction } from "../actions/add_wire_action";
 import { Breadboard } from "./breadboard";
-import { magnification, addContact } from "../stage";
+import { scale, addContact } from "../stage";
 import { Component } from "./component";
 
 export class Contact extends Component {
     offX: number;
     offY: number;
     circle: Konva.Circle;
-    constructor(id: string, parent: Component, x: number, y: number) {
+    constructor(id: string, parent: Component, layer: Konva.Layer, x: number, y: number) {
         super(id, parent);
         addContact(this);
         this.offX = x;
         this.offY = y;
         this.circle = new Konva.Circle({
-            x: this.x() * magnification(),
-            y: this.y() * magnification(),
+            x: this.x() * scale(),
+            y: this.y() * scale(),
             radius: 3,
             fill: 'black',
         });
-    }
-    add(layer: Konva.Layer) {
-        super.add(layer);
-        layer.add(this.circle); // TODO: abstract this by adding all shapes to one container.
+        this.shapes.add(this.circle);
+        this.setupEvents(layer);
     }
     x(): number {
         return this.parent()!.x() + this.offX;

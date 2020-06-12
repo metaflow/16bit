@@ -1,87 +1,10 @@
 import Konva from 'konva';
-import { Wire, ContactWire } from '../components/wire';
-import { Action, appActions } from '../action';
-import {MoveWireEndAction} from './move_wire_end_action';
+import { ContactWire } from '../components/wire';
+import { Action } from '../action';
 import {stage, toPhysical, closesetContact, toScreen} from '../stage';
 import { Contact } from '../components/contact';
 import { address, getByAddress, newAddress, addAddressRoot } from '../address';
 
-export class AddWireAction implements Action {
-    actionType = "AddWireAction";
-    wire: Wire | null;
-    layer: Konva.Layer;
-    apply() {
-        if (this.wire == null) return;
-        this.wire.add(this.layer);
-        this.setupEvents(); // TODO: move to wire
-    }
-
-    undo() {        
-        if (this.wire == null) return;
-        this.wire.remove(this.layer);
-    }
-
-    setupEvents() {
-        let wire = this.wire;
-        if (wire == null) return;
-        for (let i = 0; i < 2; i++) {
-            let t = wire.ends[i];
-            t.on('mousedown', function (e) {
-                e.cancelBubble = true;
-                if (appActions.onMouseDown(e)) return;
-                appActions.current(new MoveWireEndAction(wire!, i));
-            });
-        }
-    }
-
-    mousemove(event:  Konva.KonvaEventObject<MouseEvent>): boolean {
-        if (this.wire == null) {
-            return false;
-        }
-        const pos = stage()?.getPointerPosition();
-        if (pos == null) return false;
-        const [x, y] = [pos.x, pos.y];
-        this.wire?.end(1, x, y);
-        return false;
-    }
-
-    mousedown(event:  Konva.KonvaEventObject<MouseEvent>): boolean {
-        const pos = stage()?.getPointerPosition();
-        if (pos == null) return false;
-        const [x, y] = [pos.x, pos.y];
-        if (this.wire == null) {
-            this.wire = new Wire(x, y, x, y);
-            this.wire.add(this.layer);
-            return false;
-        }
-        this.wire.end(1, x, y);
-        this.setupEvents();
-        return true;
-    }
-
-    mouseup(event: import("konva/types/Node").KonvaEventObject<MouseEvent>): boolean {
-        return false;
-    }
-
-    cancel(): void {
-        if (this.wire == null) return;
-        this.wire.remove(this.layer);
-    }
-
-    constructor(layer: Konva.Layer) {
-        this.layer = layer;
-        this.wire = null;
-    }
-    serialize(): string {
-        throw new Error("Method not implemented.");
-    }
-    deserialize(data: string): void {
-        throw new Error("Method not implemented.");
-    }
-}
-
-
-// TODO: move to a separate file.
 export class AddContactWireAction implements Action {
     actionType = "AddContactWireAction";
     wire: ContactWire | null = null;
@@ -138,10 +61,7 @@ export class AddContactWireAction implements Action {
     }
 
     mousemove(event:  Konva.KonvaEventObject<MouseEvent>): boolean {
-        const pos = stage()?.getPointerPosition();
-        if (pos == null) return false;
-        const ph = toPhysical(pos.x, pos.y);
-        let c2 = closesetContact(ph);
+        let c2 = closesetContact();
         if (c2 == null) return false;
         const xy = toScreen(c2.x(), c2.y());
         const pp = this.line.points();
@@ -153,17 +73,13 @@ export class AddContactWireAction implements Action {
 
     private complete(c2: Contact) {
         this.c2 = c2;
-        this.wire = new ContactWire(this.c1, c2);
-        this.wire.id(newAddress());
-        addAddressRoot(this.wire); // TODO: remove root when whire is removed.
+        this.wire = new ContactWire(newAddress(), this.c1, c2);
         this.wire.add(this.layer);
         this.line.remove();        
     }
 
     mousedown(event:  Konva.KonvaEventObject<MouseEvent>): boolean {
-        const pos = stage()?.getPointerPosition();
-        if (pos == null) return false;
-        let c2 = closesetContact(toPhysical(pos.x, pos.y));
+        let c2 = closesetContact();
         if (c2 == null) return false;
         this.complete(c2);
         return true;
