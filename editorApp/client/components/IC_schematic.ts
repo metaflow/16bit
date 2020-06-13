@@ -8,9 +8,9 @@ import { Contact } from "./contact";
 const gap = 1;
 const width = 20;
 const contact_height = 5;
-const contact_label_width = 3;
-const pin_length = 3;
-const label_font_size = 2.5;
+const contact_label_width = 5;
+const pin_length = 5;
+const label_font_size = 3;
 
 export class IntegratedCircuitSchematic extends Component {
     rect: Konva.Rect;
@@ -35,19 +35,20 @@ export class IntegratedCircuitSchematic extends Component {
         this.shapes.add(this.rect);
         for (let i = 0; i < this.left_pins.length; i++) {
             const s = this.left_pins[i];
-            const t = new Konva.Text({ text: s, fill: 'black', align: 'left' });
+            const t = new Konva.Text({ text: s, fill: 'black', align: 'left', fontFamily: 'Monospace' });
             this.left_labels.push(t);
             this.shapes.add(t);
+            if (s === "") continue;
             const c = new Contact(s, this, spec.layer, - pin_length, (i + 0.5) * contact_height + gap);
             this.contacts.push(c);
             this.pin_lines.push(new Konva.Line({ points: [0, 0, 0, 0], stroke: 'black' }));
-            this.shapes.add(this.pin_lines[i]);
         }
         for (let i = 0; i < this.right_pins.length; i++) {
             const s = this.right_pins[i];
-            const t = new Konva.Text({ text: s, fill: 'black', align: 'right' });
+            const t = new Konva.Text({ text: s, fill: 'black', align: 'right', fontFamily: 'Monospace' });
             this.right_labels.push(t);
             this.shapes.add(t);
+            if (s === "") continue;
             const c = new Contact(s, this, spec.layer, width + pin_length, (i + 0.5) * contact_height + gap);            
             this.contacts.push(c);
             this.pin_lines.push(new Konva.Line({ points: [0, 0, 0, 0], stroke: 'black' }));
@@ -69,25 +70,30 @@ export class IntegratedCircuitSchematic extends Component {
         this.rect.width(width * scale());
         for (const a of this.left_labels) {
             a.fontSize(label_font_size * scale());
-            a.fontFamily('Monospace');
-            a.align('center');
             a.width(contact_height * scale());
-            a.height(5 * scale())
         }
+        for (const a of this.right_labels) {
+            a.fontSize(label_font_size * scale());
+            a.width(contact_height * scale());
+        }
+        let j = 0;
         for (let i = 0; i < this.left_pins.length; i++) {
             this.left_labels[i].width(contact_label_width * scale());
             this.left_labels[i].x(x + gap * scale());
             this.left_labels[i].y(y + (gap + (i + 0.5) * contact_height - 0.5 * label_font_size) * scale());
-            const c = this.contacts[i];
-            this.pin_lines[i].points([c.x() * scale(), c.y() * scale(), this.rect.x(), c.y() * scale()]);
+            if (this.left_pins[i] === "") continue;
+            const c = this.contacts[j];
+            this.pin_lines[j].points([c.x() * scale(), c.y() * scale(), this.rect.x(), c.y() * scale()]);
+            j++;
         }
         for (let i = 0; i < this.right_pins.length; i++) {
             this.right_labels[i].width(contact_label_width * scale())
             this.right_labels[i].x(x + (width - gap - contact_label_width) * scale());
             this.right_labels[i].y(y + (gap + (i + 0.5) * contact_height - 0.5 * label_font_size) * scale());
-            const j = i + this.left_pins.length;
+            if (this.right_pins[i] === "") continue;            
             const c = this.contacts[j];
             this.pin_lines[j].points([c.x() * scale(), c.y() * scale(), this.rect.x() + this.rect.width(), c.y() * scale()]);
+            j++;
         }
         this.name.x(x - pin_length * scale());
         this.name.y(y - (label_font_size * 2) * scale());
