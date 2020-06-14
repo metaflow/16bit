@@ -23,7 +23,6 @@ export class IntegratedCircuit extends Component {
     constructor(spec: { id: string, pins: string[], x: number, y: number, layer: Konva.Layer|null, label: string }) {
         super(spec.id);
         this.pins = spec.pins;
-        addAddressRoot(this);
         this.x(spec.x);
         this.y(spec.y);
         this.rect = new Konva.Rect({
@@ -38,10 +37,10 @@ export class IntegratedCircuit extends Component {
         }
         const w = Math.floor((this.pins.length + 1) / 2);
         for (let i = 0; i < w; i++) {
-            this.contacts.push(new Contact(this.pins[i], spec.layer, (i + 0.5) * contact_width + gap, height + pin_length, this));
+            this.contacts.push(new Contact(this.pins[i], (i + 0.5) * contact_width + gap, height + pin_length, this));
         }
         for (let i = w; i < this.pins.length; i++) {
-            this.contacts.push(new Contact(this.pins[i], spec.layer, (this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length, this));
+            this.contacts.push(new Contact(this.pins[i], (this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length, this));
         }
         for (const c of this.contacts) {
             this.addChild(c);

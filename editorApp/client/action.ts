@@ -1,5 +1,6 @@
 import Konva from 'konva';
 import { AddContactWireAction } from './actions/add_wire_action';
+import { PlaceComponentAction } from './actions/add_ic_action';
 
 export interface Action {
     actionType: string;
@@ -9,7 +10,12 @@ export interface Action {
     mousedown(event: Konva.KonvaEventObject<MouseEvent>): boolean;
     mouseup(event: Konva.KonvaEventObject<MouseEvent>): boolean;
     cancel(): void;
-    serialize(): string;
+    serialize(): any;
+}
+
+interface serializedAction {
+    type: string;
+    data: any;
 }
 
 export class Actions {
@@ -62,10 +68,12 @@ export class Actions {
         if (a != null) a.cancel();
         this.current(null);
     }
+
     save() {
         let h: string[] = [];
+        // TODO: use typed array {type:, data:} and register serialisers.
         for (const a of this.history) {
-            h.push(a.actionType + " " + a.serialize());
+            h.push(a.actionType + " " + JSON.stringify(a.serialize()));
         }
         localStorage.setItem('actions_history', JSON.stringify(h));
     }
@@ -73,6 +81,7 @@ export class Actions {
         let s = localStorage.getItem("actions_history");
         if (s === null) return;
         let h = JSON.parse(s);
+        console.info('actions_history', h);
         for (const s of h) {
             if(typeof s !== 'string'){
                 continue;
@@ -80,7 +89,10 @@ export class Actions {
             let [a, b] = s.split(' ', 2);
             let action: Action | null = null;
             if (a === 'AddContactWireAction') {
-                action = AddContactWireAction.applySerialised(b); 
+                action = AddContactWireAction.applySerialised(JSON.parse(b)); 
+            }
+            if (a === 'PlaceComponentAction') {
+                action = PlaceComponentAction.applySerialised(JSON.parse(b)); 
             }
             if (action === null) {
                 console.error(`Cannot apply deserialized action "${s}"`);

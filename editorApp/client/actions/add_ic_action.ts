@@ -1,8 +1,9 @@
 import { Action } from "../action";
 import { KonvaEventObject } from "konva/types/Node";
 import Konva from "konva";
-import { Component } from "../components/component";
+import { Component, deserializeComponent } from "../components/component";
 import { getCursorPosition, getPhysicalCursorPosition, actionLayer, defaultLayer } from "../stage";
+import { addAddressRoot, removeAddressRoot } from "../address";
 
 export class PlaceComponentAction implements Action {
     actionType: string = 'PlaceComponentAction';
@@ -21,9 +22,11 @@ export class PlaceComponentAction implements Action {
         this.component.mainColor('black');
         this.component.updateLayout();
         this.component.add(defaultLayer());
+        addAddressRoot(this.component);
     }
     undo(): void {
         this.component.remove();
+        removeAddressRoot(this.component.id());
     }
     mousemove(event: KonvaEventObject<MouseEvent>): boolean {        
         [this.x, this.y] = getPhysicalCursorPosition();
@@ -42,8 +45,16 @@ export class PlaceComponentAction implements Action {
     cancel(): void {
         this.undo();
     }
-    serialize(): string {
-        console.error("not implemented");
-        return "";
+    serialize(): any {
+        return this.component.serialize();
+    }
+    static applySerialised(data: any): Action | null {
+        let c = deserializeComponent(data);
+        if (c == null) return null;
+        let z = new PlaceComponentAction(c);
+        z.x = z.component.x();
+        z.y = z.component.y();
+        z.apply();
+        return z;
     }
 }

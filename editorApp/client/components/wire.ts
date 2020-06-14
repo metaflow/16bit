@@ -68,7 +68,6 @@ export class ContactWire extends Component {
         });        
         this.updateLayout();
         this.shapes.add(this.line);
-        addAddressRoot(this);
     }
     updateLayout() {
         super.updateLayout();

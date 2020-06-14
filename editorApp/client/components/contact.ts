@@ -1,4 +1,4 @@
-import { Addressable } from "../address";
+import { Addressable, newAddress } from "../address";
 import Konva from "konva";
 import { appActions } from "../action";
 import { AddContactWireAction } from "../actions/add_wire_action";
@@ -10,7 +10,7 @@ const radius = 0.8;
 
 export class Contact extends Component {
     circle: Konva.Circle;
-    constructor(id: string, layer: Konva.Layer|null, x: number, y: number, parent?: Component) {
+    constructor(id: string, x: number, y: number, parent?: Component) {
         super(id, parent);
         this.x(x);
         this.y(y);
@@ -19,16 +19,16 @@ export class Contact extends Component {
             radius: 1,
         });
         this.shapes.add(this.circle);
-        this.setupEvents(layer);
+        this.setupEvents();
         this.updateLayout();
     }
-    setupEvents(layer: Konva.Layer|null) {
+    setupEvents() {
         const c = this;
         this.circle.on('mousedown', function (e) {
             console.log('mousedown on contact');
             e.cancelBubble = true;
             if (appActions.onMouseDown(e)) return;
-            appActions.current(new AddContactWireAction(c));
+            appActions.current(new AddContactWireAction(c, newAddress()));
         });
     }
     updateLayout(): void {

@@ -70,12 +70,23 @@ export function closesetContact(xy?: [number, number]): Contact | null {
 
 let _defaultLayer: Konva.Layer|null;
 export function defaultLayer(layer?: Konva.Layer): Konva.Layer|null {
-    if (layer !== undefined) _defaultLayer = layer;
+    if (layer !== undefined) {
+        _defaultLayer = layer;
+        layer.setAttr('name', 'default');
+    }
     return _defaultLayer;
 }
 
 let _actionLayer: Konva.Layer|null;
-export function actionLayer(layer?: Konva.Layer): Konva.Layer|null {
-    if (layer !== undefined) _actionLayer = layer;
+export function actionLayer(layer?: Konva.Layer): Konva.Layer|null {    
+    if (layer !== undefined) {
+        _actionLayer = layer;
+        layer.setAttr('name', 'action');
+    }
     return _actionLayer;
+}
+
+export function layerByName(name: string): Konva.Layer | null {
+    if (name === 'action') return actionLayer();
+    return defaultLayer();
 }

@@ -1,6 +1,8 @@
 import { Addressable } from "../address";
 import Konva from "konva";
 
+export const deserializers: {(data: any): (Component|null)}[] = [];
+
 export abstract class Component implements Addressable {
     _id = '';
     _parent: Component | null = null;
@@ -9,6 +11,7 @@ export abstract class Component implements Addressable {
     children = new Map<string, Component>();
     shapes = new Konva.Group();
     _mainColor = 'black';
+    typeMarker: string = 'Component';
     constructor(id: string, parent?: Component) {
         this._id = id;
         if (parent !== undefined) {
@@ -65,4 +68,16 @@ export abstract class Component implements Addressable {
         }
         return this._mainColor;
     }
+    serialize(): any {
+        return {}
+    } 
+}
+
+export function deserializeComponent(data: any): (Component|null) {
+    for (const d of deserializers) {
+        let c = d(data);
+        if (c !== null) return c;
+    }
+    console.error('no deserializer accepted', data);
+    return null;
 }

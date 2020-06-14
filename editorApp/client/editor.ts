@@ -75,7 +75,7 @@ hotkeys('ctrl+shift+z', function (e) {
   actionLayer()?.batchDraw();
 });
 
-let bb = new Breadboard('bb1', defaultLayer(), 10, 10);
+let bb = new Breadboard('bb1', 10, 10);
 bb.add(defaultLayer());
 addAddressRoot(bb);
 
@@ -87,17 +87,18 @@ let ic = new IntegratedCircuit({
   pins: ['a', 'b', 'c', 'd', 'e', 'f', 'a', 'b', 'c', 'd', 'e', 'f'],
   label: '74AHTC155',
 });
+ic.add(defaultLayer());
+addAddressRoot(ic);
 
-let ic2 = new ic74x245("ic2", 50, 100, defaultLayer());
+let ic2 = new ic74x245({ id: "ic2", x: 50, y: 100 });
 ic2.add(defaultLayer());
+addAddressRoot(ic2);
 
 appActions.load();
 defaultLayer()?.batchDraw();
 actionLayer()?.batchDraw();
 
-(window as any).add245 = function() {
+(window as any).add245 = function () {
   console.log('add 245');
-  appActions.current(new PlaceComponentAction(new ic74x245(newAddress(), 0, 0, actionLayer())));  
-  // appActions.current(new PlaceComponentAction(layer, new ic74x245(newAddress(), 0, 0, layer)));  
-  // appActions.current(new PlaceComponentAction(actionLayer, new Contact(newAddress(), actionLayer, 0, 0)));  
+  appActions.current(new PlaceComponentAction(new ic74x245({ id: newAddress(), x: 0, y: 0})));
 }

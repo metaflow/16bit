@@ -1,9 +1,14 @@
-import { Component } from "./component";
+import { Component, deserializers } from "./component";
 import Konva from "konva";
 import { toScreen, scale } from "../stage";
-import { Layer } from "konva/types/Layer";
-import { addAddressRoot } from "../address";
 import { Contact } from "./contact";
+
+deserializers.push(function (data: any): (IntegratedCircuitSchematic | null) {
+    if (data['typeMarker'] !== 'IntegratedCircuitSchematic') {
+        return null
+    }
+    return new IntegratedCircuitSchematic(data['spec'] as Spec);
+});
 
 const gap = 1;
 const width = 20;
@@ -12,7 +17,17 @@ const contact_label_width = 5;
 const pin_length = 5;
 const label_font_size = 3;
 
+interface Spec {
+    id: string;
+    left_pins: string[];
+    right_pins: string[];
+    x: number;
+    y: number;
+    label: string
+}
+
 export class IntegratedCircuitSchematic extends Component {
+    typeMarker = "IntegratedCircuitSchematic";
     rect: Konva.Rect;
     name: Konva.Text;
     left_pins: string[] = [];
@@ -21,11 +36,11 @@ export class IntegratedCircuitSchematic extends Component {
     right_labels: Konva.Text[] = [];
     contacts: Contact[] = [];
     pin_lines: Konva.Line[] = [];
-    constructor(spec: { id: string, left_pins: string[], right_pins: string[], x: number, y: number, layer: Konva.Layer|null, label: string }) {
+
+    constructor(spec: Spec) {
         super(spec.id);
         this.left_pins = spec.left_pins;
         this.right_pins = spec.right_pins;
-        addAddressRoot(this);
         this.x(spec.x);
         this.y(spec.y);
         this.rect = new Konva.Rect({
@@ -39,7 +54,7 @@ export class IntegratedCircuitSchematic extends Component {
             this.left_labels.push(t);
             this.shapes.add(t);
             if (s === "") continue;
-            const c = new Contact(s, spec.layer, - pin_length, (i + 0.5) * contact_height + gap, this);
+            const c = new Contact(s, - pin_length, (i + 0.5) * contact_height + gap, this);
             this.contacts.push(c);
             this.pin_lines.push(new Konva.Line({ points: [0, 0, 0, 0], stroke: 'black' }));
         }
@@ -49,7 +64,7 @@ export class IntegratedCircuitSchematic extends Component {
             this.right_labels.push(t);
             this.shapes.add(t);
             if (s === "") continue;
-            const c = new Contact(s, spec.layer, width + pin_length, (i + 0.5) * contact_height + gap, this);            
+            const c = new Contact(s, width + pin_length, (i + 0.5) * contact_height + gap, this);
             this.contacts.push(c);
             this.pin_lines.push(new Konva.Line({ points: [0, 0, 0, 0], stroke: 'black' }));
         }
@@ -95,7 +110,7 @@ export class IntegratedCircuitSchematic extends Component {
             this.right_labels[i].width(contact_label_width * scale())
             this.right_labels[i].x(x + (width - gap - contact_label_width) * scale());
             this.right_labels[i].y(y + (gap + (i + 0.5) * contact_height - 0.5 * label_font_size) * scale());
-            if (this.right_pins[i] === "") continue;            
+            if (this.right_pins[i] === "") continue;
             const c = this.contacts[j];
             this.pin_lines[j].points([c.x() * scale(), c.y() * scale(), this.rect.x() + this.rect.width(), c.y() * scale()]);
             this.pin_lines[j].stroke(this.mainColor());
@@ -106,5 +121,19 @@ export class IntegratedCircuitSchematic extends Component {
         this.name.width(this.rect.width() + 2 * pin_length * scale());
         this.name.fontSize(label_font_size * scale());
         this.name.fill(this.mainColor());
+    }
+    serialize(): any {
+        let z: Spec = {
+            id: this.id(),
+            left_pins: this.left_pins,
+            right_pins: this.right_pins,
+            x: this.x(),
+            y: this.y(),
+            label: this.name.text(),
+        }
+        return {
+            'typeMarker': 'IntegratedCircuitSchematic',
+            'spec': z,
+        }
     }
 }

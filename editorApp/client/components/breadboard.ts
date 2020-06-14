@@ -15,7 +15,7 @@ export class Breadboard extends Component {
 
     contacts = new Map<string, Contact>();
     rect: Konva.Rect;
-    constructor(id: string, layer: Konva.Layer|null, x: number, y: number) {
+    constructor(id: string, x: number, y: number) {
         super(id);
         this.x(x);
         this.y(y);
@@ -27,7 +27,7 @@ export class Breadboard extends Component {
                 if (j == 2 || j == 3 || j == 9 || j == 10 || j == 16 || j == 17) continue;
                 if ((j == 0 || j == 1 || j == 18 || j == 19) &&
                     (i == 0 || ((i - 1) % 6 == 0) || i == 62)) continue;
-                const c = new Contact(letters[j] + (i + 1), layer, left + i * p_contact, top + j * p_contact, this);
+                const c = new Contact(letters[j] + (i + 1), left + i * p_contact, top + j * p_contact, this);
                 this.contacts.set(c.id(), c);
             }
         }
