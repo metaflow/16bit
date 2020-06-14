@@ -18,10 +18,11 @@ export class WireEnd extends Component implements Selectable {
             stroke: 'black',
             name: 'selectable',
         });
-        this.update();
+        this.updateLayout();
         this.shapes.add(this.selectionRect);
     }
-    update() {
+    updateLayout() {
+        super.updateLayout();
         const w = 3;
         let xy = toScreen(this.contact().x()-w/2, this.contact().y()-w/2);
         this.selectionRect.x(xy[0]);
@@ -34,18 +35,20 @@ export class WireEnd extends Component implements Selectable {
     selected(v?: boolean): boolean {
         if (v !== undefined) {
             this._selected = v;
-            this.update();
+            this.updateLayout();
         }
         return this._selected;
     }
     contact(contact?: Contact): Contact {
         if (contact !== undefined) {
             this._contact = contact;
-            this.update();
+            this.updateLayout();
         }
         return this._contact;
     }
 }
+
+const wireWidth = 0.5;
 
 export class ContactWire extends Component {
     line: Konva.Line;
@@ -53,30 +56,34 @@ export class ContactWire extends Component {
     constructor(id: string, c1: Contact, c2: Contact) {        
         super(id);
         this.ends.push(new WireEnd("0", this, c1));
-        this.ends.push(new WireEnd("1", this, c2));        
+        this.ends.push(new WireEnd("1", this, c2));
+        this.addChild(this.ends[0]);
+        this.addChild(this.ends[1]);
         this.line = new Konva.Line({
             points: [],
             stroke: 'blue',
             strokeWidth: 1,
             lineCap: 'round',
             lineJoin: 'round',
-        });
-        this.update();
+        });        
+        this.updateLayout();
         this.shapes.add(this.line);
         addAddressRoot(this);
     }
-    update() {
+    updateLayout() {
+        super.updateLayout();
         const [x0, y0] = toScreen(this.ends[0].contact().x(), this.ends[0].contact().y());
         const [x1, y1] = toScreen(this.ends[1].contact().x(), this.ends[1].contact().y());
         this.line.points([x0, y0, x1, y1]);
-        this.line.strokeWidth(1 * scale());
-        this.ends[0].update();
-        this.ends[1].update();
+        this.line.strokeWidth(wireWidth * scale());
+        this.line.stroke(this.mainColor());
+        this.ends[0].updateLayout();
+        this.ends[1].updateLayout();
     }
     end(i: number, c?: Contact): WireEnd {
         if (c !== undefined) {
             this.ends[i].contact(c);
-            this.update();
+            this.updateLayout();
         }
         return this.ends[i];
     }

@@ -13,7 +13,7 @@ export interface Action {
 }
 
 export class Actions {
-    private currentAction: Action | null = null;
+    private currentAction: Action | null = null; // TODO: rename to "_current"
     private readonly history: Action[] = [];
     private readonly forwardHistory: Action[] = [];
 
@@ -36,13 +36,13 @@ export class Actions {
         if (this.current()?.mousemove(event)) this.commit();
         return true;
     }
-
     commit() {
         const a = this.current();
         if (a == null) return;
         this.history.push(a);
         this.forwardHistory.splice(0, this.forwardHistory.length);
         this.current(null);
+        console.log('commit', this.current())
         this.save();
     }
     undo() {
@@ -69,7 +69,7 @@ export class Actions {
         }
         localStorage.setItem('actions_history', JSON.stringify(h));
     }
-    load(layer: Konva.Layer) {
+    load() {
         let s = localStorage.getItem("actions_history");
         if (s === null) return;
         let h = JSON.parse(s);
@@ -80,7 +80,7 @@ export class Actions {
             let [a, b] = s.split(' ', 2);
             let action: Action | null = null;
             if (a === 'AddContactWireAction') {
-                action = AddContactWireAction.applySerialised(layer, b); 
+                action = AddContactWireAction.applySerialised(b); 
             }
             if (action === null) {
                 console.error(`Cannot apply deserialized action "${s}"`);

@@ -1,13 +1,15 @@
 import Konva from 'konva';
 import hotkeys from 'hotkeys-js';
 import { appActions } from './action';
-import { stage } from './stage';
+import { stage, defaultLayer, actionLayer } from './stage';
 import { Breadboard } from './components/breadboard';
-import { addAddressRoot } from './address';
+import { addAddressRoot, newAddress } from './address';
 import { SelectAction } from './actions/select_action';
 import { IntegratedCircuit } from './components/integrated_circuit';
 import { IntegratedCircuitSchematic } from './components/IC_schematic';
 import { ic74x245 } from './components/74x245';
+import { PlaceComponentAction } from './actions/add_ic_action';
+import { Contact } from './components/contact';
 
 // first we need to create a stage
 stage(new Konva.Stage({
@@ -17,28 +19,34 @@ stage(new Konva.Stage({
 }));
 
 // then create layer
-var layer = new Konva.Layer();
-stage()?.add(layer);
+stage()?.add(defaultLayer(new Konva.Layer()));
+stage()?.add(actionLayer(new Konva.Layer()));
 // Background color.
-layer.add(new Konva.Rect({
+defaultLayer()?.add(new Konva.Rect({
   x: 0, y: 0, width: 1000, height: 1000, fill: '#FAFAFA',
 }))
 
 stage()?.on('mousemove', function (e: Konva.KonvaEventObject<MouseEvent>) {
-  if (appActions.onMouseMove(e)) layer.draw();
+  if (appActions.onMouseMove(e)) {
+    // TODO: do this draws in component?
+    actionLayer()?.batchDraw();
+    return;
+  }
 });
 
 stage()?.on('mousedown', function (e) {
   if (appActions.onMouseDown(e)) {
-    layer.draw();
+    defaultLayer()?.batchDraw();
+    actionLayer()?.batchDraw();
     return;
   }
-  appActions.current(new SelectAction(layer));
+  appActions.current(new SelectAction());
 });
 
 stage()?.on('mouseup', function (e) {
   if (appActions.onMouseUp(e)) {
-    layer.draw();
+    defaultLayer()?.batchDraw();
+    actionLayer()?.batchDraw();
     return;
   }
 });
@@ -47,39 +55,49 @@ hotkeys('esc', function (e) {
   console.log('esc');
   e.preventDefault();
   appActions.cancelCurrent();
-  layer.draw();
+  defaultLayer()?.batchDraw();
+  actionLayer()?.batchDraw();
 });
 
 hotkeys('ctrl+z', function (e) {
   console.log('ctrl+z');
   e.preventDefault();
   appActions.undo();
-  layer.draw();
+  defaultLayer()?.batchDraw();
+  actionLayer()?.batchDraw();
 });
 
 hotkeys('ctrl+shift+z', function (e) {
   console.log('ctrl+shift+z');
   e.preventDefault();
   appActions.redo();
-  layer.draw();
+  defaultLayer()?.batchDraw();
+  actionLayer()?.batchDraw();
 });
 
-let bb = new Breadboard('bb1', layer, 10, 10);
-bb.add(layer);
+let bb = new Breadboard('bb1', defaultLayer(), 10, 10);
+bb.add(defaultLayer());
 addAddressRoot(bb);
 
 let ic = new IntegratedCircuit({
   id: "ic",
   x: 5,
   y: 100,
-  layer,
+  layer: defaultLayer(),
   pins: ['a', 'b', 'c', 'd', 'e', 'f', 'a', 'b', 'c', 'd', 'e', 'f'],
   label: '74AHTC155',
 });
 
-let ic2 = new ic74x245("ic2", 50, 100, layer);
-ic2.add(layer);
+let ic2 = new ic74x245("ic2", 50, 100, defaultLayer());
+ic2.add(defaultLayer());
 
-appActions.load(layer);
+appActions.load();
+defaultLayer()?.batchDraw();
+actionLayer()?.batchDraw();
 
-layer.draw();
+(window as any).add245 = function() {
+  console.log('add 245');
+  appActions.current(new PlaceComponentAction(new ic74x245(newAddress(), 0, 0, actionLayer())));  
+  // appActions.current(new PlaceComponentAction(layer, new ic74x245(newAddress(), 0, 0, layer)));  
+  // appActions.current(new PlaceComponentAction(actionLayer, new Contact(newAddress(), actionLayer, 0, 0)));  
+}

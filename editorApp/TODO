@@ -1,6 +1,10 @@
+- separate action for layers
+- schematic serealization
 - schematic
-    - is iT possible to make two layers and move them in relation to each other?
+    - toolbar to add components
+    - is it possible to make two layers and move them in relation to each other?
     - separate layer and address space for schematic
+    - add IC should be in different color
     - schematic IC @done
     - add schematic IC
     - select IC

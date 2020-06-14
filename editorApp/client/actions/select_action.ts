@@ -1,6 +1,6 @@
 import { Action } from "../action";
 import Konva from "konva";
-import { stage, getCursorPosition } from "../stage";
+import { stage, getCursorPosition, actionLayer } from "../stage";
 import { getByAddress } from "../address";
 
 export interface Selectable {
@@ -11,14 +11,14 @@ export interface Selectable {
 export class SelectAction implements Action {
     actionType = "SelectAction";
     rect: Konva.Rect;
-    constructor(layer: Konva.Layer) {
+    constructor() {
         let pos = getCursorPosition();
         this.rect = new Konva.Rect({
             x: pos.x,
             y: pos.y,
             fill: 'rgba(0,0,255,0.5)',
         });
-        layer.add(this.rect);
+        actionLayer()?.add(this.rect);
     }
     apply(): void {
         throw new Error("Method not implemented.");

@@ -1,20 +1,18 @@
 import Konva from 'konva';
 import { ContactWire } from '../components/wire';
 import { Action } from '../action';
-import {stage, toPhysical, closesetContact, toScreen} from '../stage';
+import {stage, toPhysical, closesetContact, toScreen, actionLayer, defaultLayer} from '../stage';
 import { Contact } from '../components/contact';
 import { address, getByAddress, newAddress, addAddressRoot } from '../address';
 
 export class AddContactWireAction implements Action {
     actionType = "AddContactWireAction";
     wire: ContactWire | null = null;
-    layer: Konva.Layer;
     line: Konva.Line;
     c1: Contact;
     c2: Contact|null = null;
 
-    constructor(layer: Konva.Layer, contact: Contact) {
-        this.layer = layer;
+    constructor(contact: Contact) {
         this.c1 = contact;
         const xy = toScreen(contact.x(), contact.y());
         this.line = new Konva.Line({
@@ -24,7 +22,7 @@ export class AddContactWireAction implements Action {
             lineCap: 'round',
             lineJoin: 'round',
         });
-        this.layer.add(this.line);
+        actionLayer()?.add(this.line);
     }
     mouseup(event: import("konva/types/Node").KonvaEventObject<MouseEvent>): boolean {
         return false;
@@ -37,7 +35,7 @@ export class AddContactWireAction implements Action {
     }
     deserialize(data: string): void {        
     }
-    static applySerialised(layer: Konva.Layer, data: string): AddContactWireAction|null {
+    static applySerialised(data: string): AddContactWireAction|null {
         const d = JSON.parse(data);
         let c1 = getByAddress(d['contact_1']); 
         if (c1 == null) return null;        
@@ -45,14 +43,14 @@ export class AddContactWireAction implements Action {
         let c2 = getByAddress(d['contact_2']); 
         if (c2 == null) return null;
         if (!(c2 instanceof Contact)) throw new Error(`${d['contact_1']} is not a contact`);
-        const z = new AddContactWireAction(layer, c1);
+        const z = new AddContactWireAction(c1);
         z.complete(c2);
         return z;
     }
 
     apply() {
         if (this.wire == null) return;
-        this.wire.add(this.layer);
+        this.wire.add(defaultLayer());
     }
 
     undo() {
@@ -74,7 +72,7 @@ export class AddContactWireAction implements Action {
     private complete(c2: Contact) {
         this.c2 = c2;
         this.wire = new ContactWire(newAddress(), this.c1, c2);
-        this.wire.add(this.layer);
+        this.wire.add(defaultLayer());
         this.line.remove();        
     }
 

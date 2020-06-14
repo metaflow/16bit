@@ -23,6 +23,11 @@ export function getCursorPosition() {
     return pos;
 }
 
+export function getPhysicalCursorPosition(): [number, number] {
+    const xy = getCursorPosition();
+    return toPhysical(xy.x, xy.y);
+}
+
 export function scale(): number {
     return 4;
 }
@@ -61,4 +66,16 @@ export function closesetContact(xy?: [number, number]): Contact | null {
         }
     });
     return z;
+}
+
+let _defaultLayer: Konva.Layer|null;
+export function defaultLayer(layer?: Konva.Layer): Konva.Layer|null {
+    if (layer !== undefined) _defaultLayer = layer;
+    return _defaultLayer;
+}
+
+let _actionLayer: Konva.Layer|null;
+export function actionLayer(layer?: Konva.Layer): Konva.Layer|null {
+    if (layer !== undefined) _actionLayer = layer;
+    return _actionLayer;
 }

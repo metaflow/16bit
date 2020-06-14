@@ -20,7 +20,7 @@ export class IntegratedCircuit extends Component {
 
     pins: string[];
     contacts: Contact[] = [];
-    constructor(spec: { id: string, pins: string[], x: number, y: number, layer: Konva.Layer, label: string }) {
+    constructor(spec: { id: string, pins: string[], x: number, y: number, layer: Konva.Layer|null, label: string }) {
         super(spec.id);
         this.pins = spec.pins;
         addAddressRoot(this);
@@ -30,7 +30,7 @@ export class IntegratedCircuit extends Component {
             stroke: 'black',
             strokeWidth: 1,
         });
-        spec.layer.add(this.rect);
+        this.shapes.add(this.rect);
         for (const s of this.pins) {
             const t = new Konva.Text({ text: s, fill: 'black' });
             this.labels.push(t);
@@ -38,22 +38,23 @@ export class IntegratedCircuit extends Component {
         }
         const w = Math.floor((this.pins.length + 1) / 2);
         for (let i = 0; i < w; i++) {
-            this.contacts.push(new Contact(this.pins[i], this, spec.layer, (i + 0.5) * contact_width + gap, height + pin_length));
+            this.contacts.push(new Contact(this.pins[i], spec.layer, (i + 0.5) * contact_width + gap, height + pin_length, this));
         }
         for (let i = w; i < this.pins.length; i++) {
-            this.contacts.push(new Contact(this.pins[i], this, spec.layer, (this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length));
+            this.contacts.push(new Contact(this.pins[i], spec.layer, (this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length, this));
         }
         for (const c of this.contacts) {
-            c.add(spec.layer);
+            this.addChild(c);
         }
         this.name = new Konva.Text({ text: spec.label, align: 'center' });
-        spec.layer.add(this.name);
+        this.shapes.add(this.name);
         this.arc = new Konva.Arc({ angle: 180, rotation: -90, innerRadius: 10, outerRadius: 10, stroke: 'black' });
-        spec.layer.add(this.arc);
-        this.update();
+        this.shapes.add(this.arc);
+        this.updateLayout();
     }
 
-    update() {
+    updateLayout() {
+        super.updateLayout();
         let [x, y] = toScreen(this.x(), this.y());
         const w = Math.floor((this.pins.length + 1) / 2);
         console.log('w', w);
