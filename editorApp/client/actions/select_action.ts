@@ -59,7 +59,7 @@ export class SelectAction implements Action {
     cancel(): void {
         this.rect.remove();
     }
-    serialize(): string {
-        return "";
+    serialize(): any {
+        return null;
     }
 }

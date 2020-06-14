@@ -2,6 +2,8 @@ import Konva from 'konva';
 import { AddContactWireAction } from './actions/add_wire_action';
 import { PlaceComponentAction } from './actions/add_ic_action';
 
+export const actionDeserializers: {(data: any): (Action|null)}[] = [];
+
 export interface Action {
     actionType: string;
     apply(): void;
@@ -19,13 +21,13 @@ interface serializedAction {
 }
 
 export class Actions {
-    private currentAction: Action | null = null; // TODO: rename to "_current"
+    private _current: Action | null = null;
     private readonly history: Action[] = [];
     private readonly forwardHistory: Action[] = [];
 
     current(a?: Action | null): Action | null {
-        if (a !== undefined) this.currentAction = a;
-        return this.currentAction;
+        if (a !== undefined) this._current = a;
+        return this._current;
     }
     onMouseDown(event: Konva.KonvaEventObject<MouseEvent>): boolean {
         if (this.current() == null) return false;
@@ -70,10 +72,11 @@ export class Actions {
     }
 
     save() {
-        let h: string[] = [];
-        // TODO: use typed array {type:, data:} and register serialisers.
+        let h: any[] = [];
         for (const a of this.history) {
-            h.push(a.actionType + " " + JSON.stringify(a.serialize()));
+            const s = a.serialize();
+            if (s == null) continue;
+            h.push(s);
         }
         localStorage.setItem('actions_history', JSON.stringify(h));
     }
@@ -81,24 +84,17 @@ export class Actions {
         let s = localStorage.getItem("actions_history");
         if (s === null) return;
         let h = JSON.parse(s);
-        console.info('actions_history', h);
-        for (const s of h) {
-            if(typeof s !== 'string'){
-                continue;
+        for (const data of h) {
+            let a: Action|null = null;
+            for (const d of actionDeserializers) {
+                a = d(data);
+                if (a !== null) break;
             }
-            let [a, b] = s.split(' ', 2);
-            let action: Action | null = null;
-            if (a === 'AddContactWireAction') {
-                action = AddContactWireAction.applySerialised(JSON.parse(b)); 
-            }
-            if (a === 'PlaceComponentAction') {
-                action = PlaceComponentAction.applySerialised(JSON.parse(b)); 
-            }
-            if (action === null) {
-                console.error(`Cannot apply deserialized action "${s}"`);
+            if (a == null) {
+                console.error(`Cannot apply deserialized action "${data}"`);
                 break;
             }
-            this.history.push(action);
+            this.history.push(a);
         }
     }
 }

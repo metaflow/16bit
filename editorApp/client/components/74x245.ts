@@ -1,7 +1,7 @@
 import { IntegratedCircuitSchematic } from "./IC_schematic";
-import { deserializers } from "./component";
+import { componentDeserializers } from "./component";
 
-deserializers.push(function (data: any): (IntegratedCircuitSchematic | null) {
+componentDeserializers.push(function (data: any): (IntegratedCircuitSchematic | null) {
     if (data['typeMarker'] !== 'ic74x245') {
         return null
     }

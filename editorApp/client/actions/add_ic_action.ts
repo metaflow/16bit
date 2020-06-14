@@ -1,4 +1,4 @@
-import { Action } from "../action";
+import { Action, actionDeserializers } from "../action";
 import { KonvaEventObject } from "konva/types/Node";
 import Konva from "konva";
 import { Component, deserializeComponent } from "../components/component";
@@ -46,15 +46,20 @@ export class PlaceComponentAction implements Action {
         this.undo();
     }
     serialize(): any {
-        return this.component.serialize();
-    }
-    static applySerialised(data: any): Action | null {
-        let c = deserializeComponent(data);
-        if (c == null) return null;
-        let z = new PlaceComponentAction(c);
-        z.x = z.component.x();
-        z.y = z.component.y();
-        z.apply();
-        return z;
+        return  {
+            'typeMarker': 'PlaceComponentAction',
+            'spec': this.component.serialize(),
+        }
     }
 }
+
+actionDeserializers.push(function(data: any): Action|null {
+    if (data['typeMarker'] !== 'PlaceComponentAction') return null;
+    let c = deserializeComponent(data['spec']);
+    if (c == null) return null;
+    let z = new PlaceComponentAction(c);
+    z.x = z.component.x();
+    z.y = z.component.y();
+    z.apply();
+    return z;
+});

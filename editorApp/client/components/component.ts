@@ -1,7 +1,7 @@
 import { Addressable } from "../address";
 import Konva from "konva";
 
-export const deserializers: {(data: any): (Component|null)}[] = [];
+export const componentDeserializers: {(data: any): (Component|null)}[] = [];
 
 export abstract class Component implements Addressable {
     _id = '';
@@ -74,7 +74,7 @@ export abstract class Component implements Addressable {
 }
 
 export function deserializeComponent(data: any): (Component|null) {
-    for (const d of deserializers) {
+    for (const d of componentDeserializers) {
         let c = d(data);
         if (c !== null) return c;
     }

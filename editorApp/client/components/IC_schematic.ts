@@ -1,9 +1,9 @@
-import { Component, deserializers } from "./component";
+import { Component, componentDeserializers } from "./component";
 import Konva from "konva";
 import { toScreen, scale } from "../stage";
 import { Contact } from "./contact";
 
-deserializers.push(function (data: any): (IntegratedCircuitSchematic | null) {
+componentDeserializers.push(function (data: any): (IntegratedCircuitSchematic | null) {
     if (data['typeMarker'] !== 'IntegratedCircuitSchematic') {
         return null
     }
