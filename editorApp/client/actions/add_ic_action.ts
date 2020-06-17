@@ -5,6 +5,17 @@ import { Component, deserializeComponent } from "../components/component";
 import { getCursorPosition, getPhysicalCursorPosition, actionLayer, defaultLayer } from "../stage";
 import { addAddressRoot, removeAddressRoot } from "../address";
 
+actionDeserializers.push(function(data: any): Action|null {
+    if (data['typeMarker'] !== 'PlaceComponentAction') return null;
+    let c = deserializeComponent(data['spec']);
+    if (c == null) return null;
+    let z = new PlaceComponentAction(c);
+    z.x = z.component.x();
+    z.y = z.component.y();
+    z.apply();
+    return z;
+});
+
 export class PlaceComponentAction implements Action {
     actionType: string = 'PlaceComponentAction';
     x: number = 0;
@@ -52,14 +63,3 @@ export class PlaceComponentAction implements Action {
         }
     }
 }
-
-actionDeserializers.push(function(data: any): Action|null {
-    if (data['typeMarker'] !== 'PlaceComponentAction') return null;
-    let c = deserializeComponent(data['spec']);
-    if (c == null) return null;
-    let z = new PlaceComponentAction(c);
-    z.x = z.component.x();
-    z.y = z.component.y();
-    z.apply();
-    return z;
-});

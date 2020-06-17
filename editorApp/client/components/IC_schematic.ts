@@ -68,9 +68,6 @@ export class IntegratedCircuitSchematic extends Component {
             this.contacts.push(c);
             this.pin_lines.push(new Konva.Line({ points: [0, 0, 0, 0], stroke: 'black' }));
         }
-        for (const c of this.contacts) {
-            this.addChild(c);
-        }
         for (const x of this.pin_lines) this.shapes.add(x);
         this.name = new Konva.Text({ text: spec.label, align: 'center', wrap: 'none' });
         this.shapes.add(this.name);

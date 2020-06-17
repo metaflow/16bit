@@ -39,7 +39,8 @@ export function getByAddress(address: string): any|null {
 
 let _nextAddress = 0
 export function newAddress(): string {
-    while (roots.has(''+_nextAddress))_nextAddress++;
+    _nextAddress++;
+    while (roots.has(''+_nextAddress)) _nextAddress++;
     return "" + _nextAddress;
 }
 

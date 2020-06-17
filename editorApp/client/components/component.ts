@@ -25,6 +25,9 @@ export abstract class Component implements Addressable {
     }
     addChild(c: Component) {
         this.shapes.add(c.shapes);
+        if (this.children.has(c.id())) {
+            throw new Error(`child with id "${c.id()}" already present`);
+        }
         this.children.set(c.id(), c);
     }
     addressParent(): Addressable | null {

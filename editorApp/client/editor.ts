@@ -28,8 +28,8 @@ defaultLayer()?.add(new Konva.Rect({
 
 stage()?.on('mousemove', function (e: Konva.KonvaEventObject<MouseEvent>) {
   if (appActions.onMouseMove(e)) {
-    // TODO: do this draws in component?
     actionLayer()?.batchDraw();
+    defaultLayer()?.batchDraw();
     return;
   }
 });
@@ -52,7 +52,6 @@ stage()?.on('mouseup', function (e) {
 });
 
 hotkeys('esc', function (e) {
-  console.log('esc');
   e.preventDefault();
   appActions.cancelCurrent();
   defaultLayer()?.batchDraw();
@@ -60,7 +59,6 @@ hotkeys('esc', function (e) {
 });
 
 hotkeys('ctrl+z', function (e) {
-  console.log('ctrl+z');
   e.preventDefault();
   appActions.undo();
   defaultLayer()?.batchDraw();
@@ -68,7 +66,6 @@ hotkeys('ctrl+z', function (e) {
 });
 
 hotkeys('ctrl+shift+z', function (e) {
-  console.log('ctrl+shift+z');
   e.preventDefault();
   appActions.redo();
   defaultLayer()?.batchDraw();

@@ -1,35 +1,67 @@
 import Konva from 'konva';
 import { Contact } from './contact';
-import { scale, toScreen } from '../stage';
+import { scale, toScreen, getPhysicalCursorPosition } from '../stage';
 import { Addressable, address, newAddress, addAddressRoot } from '../address';
 import { Selectable } from '../actions/select_action';
 import { Component } from './component';
+import { appActions } from '../action';
+import { MoveWirePointAction } from '../actions/move_wire_point';
 
-export class WireEnd extends Component implements Selectable {
+interface WirePointSpec {
+    id: string;
+    x?: number;
+    y?: number;
+    contact?: Contact;
+    wire: ContactWire;
+}
+
+const wirePointSize = 3;
+
+export class WirePoint extends Component implements Selectable {
     selectableInterface: true = true;
-    _contact: Contact;
+    _contact: Contact | null = null;
     selectionRect: Konva.Rect;
     _selected: boolean = false;
-    constructor(id: string, parent: Component, c: Contact) {
-        super(id, parent);
-        this._contact = c;
+    _wire: ContactWire;
+    constructor(spec: WirePointSpec) {
+        super(spec.id, spec.wire);
+        this._wire = spec.wire;
+        if (spec.contact !== undefined) this._contact = spec.contact;
+        if (spec.x !== undefined) this.x(spec.x);
+        if (spec.y !== undefined) this.y(spec.y);
         this.selectionRect = new Konva.Rect({
             dash: [1, 1],
             stroke: 'black',
             name: 'selectable',
         });
-        this.updateLayout();
+        const point = this;
+        this.selectionRect.on('mousedown', function (e) {
+            console.log('click on wire point');
+            e.cancelBubble = true;
+            appActions.current(new MoveWirePointAction([point], getPhysicalCursorPosition()));
+            // TODO: convert to action.
+            // if (!point.selected()) {
+            //     point.selected(true);
+            //     point.updateLayout();
+            //     point.selectionRect.getLayer()?.batchDraw();
+            //     return;
+            // }
+        });
+        this.selectionRect.attrs['address'] = address(this);
         this.shapes.add(this.selectionRect);
+        this.updateLayout();
     }
     updateLayout() {
         super.updateLayout();
-        const w = 3;
-        let xy = toScreen(this.contact().x()-w/2, this.contact().y()-w/2);
+        if (this._contact != null) {
+            this.x(this._contact.x());
+            this.y(this._contact.y());
+        }
+        let xy = toScreen(this.x() - wirePointSize / 2, this.y() - wirePointSize / 2);
         this.selectionRect.x(xy[0]);
         this.selectionRect.y(xy[1]);
-        this.selectionRect.width(w * scale());
-        this.selectionRect.height(w * scale());
-        this.selectionRect.attrs['address'] = address(this);
+        this.selectionRect.width(wirePointSize * scale());
+        this.selectionRect.height(wirePointSize * scale());
         this.selectionRect.stroke(this.selected() ? 'red' : 'black');
     }
     selected(v?: boolean): boolean {
@@ -39,12 +71,15 @@ export class WireEnd extends Component implements Selectable {
         }
         return this._selected;
     }
-    contact(contact?: Contact): Contact {
+    contact(contact?: Contact | null): Contact | null {
         if (contact !== undefined) {
             this._contact = contact;
             this.updateLayout();
         }
         return this._contact;
+    }
+    wire(): ContactWire {
+        return this._wire;
     }
 }
 
@@ -52,13 +87,17 @@ const wireWidth = 0.5;
 
 export class ContactWire extends Component {
     line: Konva.Line;
-    ends: WireEnd[] = [];
-    constructor(id: string, c1: Contact, c2: Contact) {        
+    points: WirePoint[] = [];
+    constructor(id: string, c1: Contact, c2: Contact) {
         super(id);
-        this.ends.push(new WireEnd("0", this, c1));
-        this.ends.push(new WireEnd("1", this, c2));
-        this.addChild(this.ends[0]);
-        this.addChild(this.ends[1]);
+        this.points.push(new WirePoint({ id: newAddress(), wire: this, contact: c1 }));        
+        this.points.push(new WirePoint({
+            id: newAddress(),
+            wire: this,
+            x: (c1.x() + c2.x()) / 2,
+            y: (c1.y() + c2.y()) / 2,
+        }));
+        this.points.push(new WirePoint({ id: newAddress(), wire: this, contact: c2 }));
         this.line = new Konva.Line({
             points: [],
             stroke: 'blue',
@@ -66,27 +105,25 @@ export class ContactWire extends Component {
             lineCap: 'round',
             lineJoin: 'round',
         });        
-        this.updateLayout();
         this.shapes.add(this.line);
+        this.updateLayout();
     }
     updateLayout() {
         super.updateLayout();
-        const [x0, y0] = toScreen(this.ends[0].contact().x(), this.ends[0].contact().y());
-        const [x1, y1] = toScreen(this.ends[1].contact().x(), this.ends[1].contact().y());
-        this.line.points([x0, y0, x1, y1]);
+        const pp: number[] = [];
+        for (const p of this.points) {
+            const [x, y] = toScreen(p.x(), p.y());
+            pp.push(x, y);
+        }
+        this.line.points(pp);
         this.line.strokeWidth(wireWidth * scale());
         this.line.stroke(this.mainColor());
-        this.ends[0].updateLayout();
-        this.ends[1].updateLayout();
     }
-    end(i: number, c?: Contact): WireEnd {
+    end(i: number, c?: Contact): WirePoint {
         if (c !== undefined) {
-            this.ends[i].contact(c);
+            this.points[i].contact(c);
             this.updateLayout();
         }
-        return this.ends[i];
-    }
-    remove() {
-        
+        return this.points[i];
     }
 }

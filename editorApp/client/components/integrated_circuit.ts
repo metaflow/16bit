@@ -2,7 +2,7 @@ import { Component } from "./component";
 import Konva from "konva";
 import { toScreen, scale } from "../stage";
 import { Layer } from "konva/types/Layer";
-import { addAddressRoot } from "../address";
+import { addAddressRoot, newAddress } from "../address";
 import { Contact } from "./contact";
 
 const gap = 1;
@@ -37,13 +37,10 @@ export class IntegratedCircuit extends Component {
         }
         const w = Math.floor((this.pins.length + 1) / 2);
         for (let i = 0; i < w; i++) {
-            this.contacts.push(new Contact(this.pins[i], (i + 0.5) * contact_width + gap, height + pin_length, this));
+            this.contacts.push(new Contact(newAddress(), (i + 0.5) * contact_width + gap, height + pin_length, this));
         }
         for (let i = w; i < this.pins.length; i++) {
-            this.contacts.push(new Contact(this.pins[i], (this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length, this));
-        }
-        for (const c of this.contacts) {
-            this.addChild(c);
+            this.contacts.push(new Contact(newAddress(), (this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length, this));
         }
         this.name = new Konva.Text({ text: spec.label, align: 'center' });
         this.shapes.add(this.name);
@@ -56,7 +53,6 @@ export class IntegratedCircuit extends Component {
         super.updateLayout();
         let [x, y] = toScreen(this.x(), this.y());
         const w = Math.floor((this.pins.length + 1) / 2);
-        console.log('w', w);
         this.rect.x(x);
         this.rect.y(y);
         this.rect.width((w * contact_width + gap * 2) * scale());
