@@ -58,8 +58,12 @@ export abstract class Component implements Addressable {
         this.children.forEach(c => c.add(layer));
     }
     remove() {
+        if (this._parent !== null) this._parent.removeChild(this);
         this.shapes.remove();
         this.children.forEach(v => v.remove());
+    }
+    removeChild(x: Component) {
+        this.children.delete(x.id());
     }
     updateLayout() {
         this.children.forEach(c => c.updateLayout());

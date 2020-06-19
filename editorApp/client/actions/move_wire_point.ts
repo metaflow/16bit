@@ -76,9 +76,10 @@ export class MoveWirePointAction implements Action {
     }    
   }
   apply(): void {
-    this.updatePositions()
+    this.updatePositions();
+    for (const p of this.points) p._helper = false;
     for (const p of this.points) {
-      p.addNeighbours(); // TODO: only if it breaks straight line.
+      p.wire().updateIntermediatePoints();
       p.wire().updateLayout();
     }    
   }
