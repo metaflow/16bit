@@ -1,3 +1,5 @@
+import { Component } from "./components/component";
+
 export interface Addressable {
     id(): string;
     addressParent(): Addressable|null;
@@ -37,11 +39,15 @@ export function getByAddress(address: string): any|null {
     return t;
 }
 
-let _nextAddress = 0
-export function newAddress(): string {
-    _nextAddress++;
-    while (roots.has(''+_nextAddress)) _nextAddress++;
-    return "" + _nextAddress;
+export function newAddress(p?: Component): string {
+    if (p !== undefined) {
+        let i = 0;
+        while (p.children.has('' + i)) i++;
+        return '' + i;
+    }    
+    let i = 0;
+    while (roots.has(''+i)) i++;
+    return "" + i;
 }
 
 export function address(a: Addressable|null): string {

@@ -28,7 +28,7 @@ export class Contact extends Component {
             console.log('mousedown on contact');
             e.cancelBubble = true;
             if (appActions.onMouseDown(e)) return;
-            appActions.current(new AddContactWireAction(c, newAddress()));
+            appActions.current(new AddContactWireAction(c));
         });
     }
     updateLayout(): void {

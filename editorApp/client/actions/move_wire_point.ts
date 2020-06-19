@@ -65,7 +65,7 @@ export class MoveWirePointAction implements Action {
       'spec': z,
     }
   }
-  apply(): void {
+  updatePositions() {
     const dx = this.to[0] - this.from[0];
     const dy = this.to[1] - this.from[1];
     for (let i = 0; i < this.points.length; i++) {
@@ -73,7 +73,14 @@ export class MoveWirePointAction implements Action {
       p.x(this.original[i].x + dx); 
       p.y(this.original[i].y + dy);
       p.wire().updateLayout();
-    }
+    }    
+  }
+  apply(): void {
+    this.updatePositions()
+    for (const p of this.points) {
+      p.addNeighbours(); // TODO: only if it breaks straight line.
+      p.wire().updateLayout();
+    }    
   }
   undo(): void {
     for (let i = 0; i < this.points.length; i++) {
@@ -81,11 +88,12 @@ export class MoveWirePointAction implements Action {
       p.x(this.original[i].x); 
       p.y(this.original[i].y);
       p.wire().updateLayout();
+      // TODO: remove neighbours.
     }
   }
   mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean {
     this.to = getPhysicalCursorPosition();
-    this.apply();
+    this.updatePositions();
     return false;
   }
   mousedown(event: Konva.KonvaEventObject<MouseEvent>): boolean {

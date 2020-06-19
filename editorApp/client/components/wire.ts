@@ -18,6 +18,31 @@ interface WirePointSpec {
 const wirePointSize = 3;
 
 export class WirePoint extends Component implements Selectable {
+    addNeighbours() {
+        const pp: WirePoint[] = [];
+        const n = this._wire.points.length;
+        for (let i = 0; i < n; i++) {
+            const p = this._wire.points[i];
+            if (p.id() !== this.id() || i == 0 || i == n - 1) {
+                pp.push(p);
+                continue;
+            }
+            pp.push(new WirePoint({
+                id: newAddress(this._wire),
+                wire: this._wire,
+                x: (p.x() + this._wire.points[i - 1].x()) / 2,
+                y: (p.y() + this._wire.points[i - 1].y()) / 2,
+            }));
+            pp.push(p);
+            pp.push(new WirePoint({
+                id: newAddress(this._wire),
+                wire: this._wire,
+                x: (p.x() + this._wire.points[i + 1].x()) / 2,
+                y: (p.y() + this._wire.points[i + 1].y()) / 2,
+            }));
+        }
+        this._wire.points = pp;
+    }
     selectableInterface: true = true;
     _contact: Contact | null = null;
     selectionRect: Konva.Rect;
@@ -90,14 +115,14 @@ export class ContactWire extends Component {
     points: WirePoint[] = [];
     constructor(id: string, c1: Contact, c2: Contact) {
         super(id);
-        this.points.push(new WirePoint({ id: newAddress(), wire: this, contact: c1 }));        
+        this.points.push(new WirePoint({ id: newAddress(this), wire: this, contact: c1 }));        
         this.points.push(new WirePoint({
-            id: newAddress(),
+            id: newAddress(this),
             wire: this,
             x: (c1.x() + c2.x()) / 2,
             y: (c1.y() + c2.y()) / 2,
         }));
-        this.points.push(new WirePoint({ id: newAddress(), wire: this, contact: c2 }));
+        this.points.push(new WirePoint({ id: newAddress(this), wire: this, contact: c2 }));
         this.line = new Konva.Line({
             points: [],
             stroke: 'blue',

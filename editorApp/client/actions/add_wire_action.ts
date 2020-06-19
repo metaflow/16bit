@@ -3,7 +3,7 @@ import { ContactWire } from '../components/wire';
 import { Action, actionDeserializers } from '../action';
 import { stage, toPhysical, closesetContact, toScreen, actionLayer, defaultLayer } from '../stage';
 import { Contact } from '../components/contact';
-import { address, getByAddress, newAddress, addAddressRoot, removeAddressRoot } from '../address';
+import { address, getByAddress, addAddressRoot, removeAddressRoot, newAddress } from '../address';
 
 export class AddContactWireAction implements Action {
     actionType = "AddContactWireAction";
@@ -11,10 +11,8 @@ export class AddContactWireAction implements Action {
     line: Konva.Line;
     c1: Contact;
     c2: Contact | null = null;
-    wireId: string;
 
-    constructor(contact: Contact, wireId: string) {
-        this.wireId = wireId;
+    constructor(contact: Contact) {
         this.c1 = contact;
         const xy = toScreen(contact.x(), contact.y());
         this.line = new Konva.Line({
@@ -52,7 +50,7 @@ export class AddContactWireAction implements Action {
 
     complete(c2: Contact) {
         this.c2 = c2;
-        this.wire = new ContactWire(this.wireId, this.c1, c2);
+        this.wire = new ContactWire(newAddress(), this.c1, c2);
         this.wire.add(defaultLayer());
         this.line.remove();
         addAddressRoot(this.wire);
@@ -91,7 +89,7 @@ actionDeserializers.push(function (data: any): Action | null {
     let c2 = getByAddress(spec['contact_2']);
     if (c2 == null) return null;
     if (!(c2 instanceof Contact)) throw new Error(`${spec['contact_1']} is not a contact`);
-    const z = new AddContactWireAction(c1, spec['wire_id']);
+    const z = new AddContactWireAction(c1);
     z.complete(c2);
     return z;
 });
