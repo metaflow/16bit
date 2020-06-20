@@ -1,6 +1,6 @@
-import { Action } from "../action";
+import { Action, actionDeserializers } from "../action";
 import Konva from "konva";
-import { stage, getCursorPosition, actionLayer } from "../stage";
+import { stage, getCursorPosition, actionLayer, select, selectionAddresses, clearSelection } from "../stage";
 import { getByAddress } from "../address";
 
 export interface Selectable {
@@ -8,10 +8,29 @@ export interface Selectable {
     selected(v?: boolean): boolean;
 }
 
+actionDeserializers.push(function(data: any): Action|null {
+    if (data['typeMarker'] !== 'SelectAction') return null;
+    const s: Spec = data['spec']; 
+    let z = new SelectAction();
+    z.newSelection = s.newSelection;
+    z.prevSelection = s.prevSelection;
+    z.apply();
+    return z;
+  });
+
+interface Spec {
+    prevSelection: string[];
+    newSelection: string[];
+}
+
 export class SelectAction implements Action {
     actionType = "SelectAction";
     rect: Konva.Rect;
+    prevSelection: string[];
+    newSelection: string[] = [];
     constructor() {
+        this.prevSelection = selectionAddresses();
+        
         let pos = getCursorPosition();
         this.rect = new Konva.Rect({
             x: pos.x,
@@ -21,21 +40,14 @@ export class SelectAction implements Action {
         actionLayer()?.add(this.rect);
     }
     apply(): void {
-        throw new Error("Method not implemented.");
+        clearSelection();
+        this.newSelection.map(x => getByAddress(x)).forEach(x => select(x as Selectable));
     }
     undo(): void {
-        throw new Error("Method not implemented.");
+        clearSelection();
+        this.prevSelection.map(x => getByAddress(x)).forEach(x => select(x as any as Selectable));
     }
     mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean {
-        let pos = getCursorPosition();
-        this.rect.width(pos.x - this.rect.x());
-        this.rect.height(pos.y - this.rect.y());
-        return false;
-    }
-    mousedown(event: Konva.KonvaEventObject<MouseEvent>): boolean {
-        throw new Error("Method not implemented.");
-    }
-    mouseup(event: Konva.KonvaEventObject<MouseEvent>): boolean {
         let pos = getCursorPosition();
         this.rect.width(pos.x - this.rect.x());
         this.rect.height(pos.y - this.rect.y());
@@ -45,14 +57,24 @@ export class SelectAction implements Action {
         var selected = shapes.toArray().filter((shape) => {
             return Konva.Util.haveIntersection(action.rect.getClientRect(null), shape.getClientRect())
         });
-        for (const s of selected) {
+        this.newSelection = [];
+        for (const s of selected) {            
             const a = s.attrs['address'];
+            this.newSelection.push(a);
             const x = getByAddress(a);
             console.log(a, x);
-            if (x.selectableInterface) {
-                (x as Selectable).selected(true);
-            }
         }
+        this.apply();        
+        return false;
+    }
+    mousedown(event: Konva.KonvaEventObject<MouseEvent>): boolean {
+        return false;
+    }
+    mouseup(event: Konva.KonvaEventObject<MouseEvent>): boolean {
+        let pos = getCursorPosition();
+        this.rect.width(pos.x - this.rect.x());
+        this.rect.height(pos.y - this.rect.y());
+        
         this.rect.remove();
         return true;
     }
@@ -60,6 +82,13 @@ export class SelectAction implements Action {
         this.rect.remove();
     }
     serialize(): any {
-        return null;
+        let z: Spec = {
+prevSelection : this.prevSelection,
+newSelection: this.newSelection,
+        };
+      return {
+            'typeMarker': 'SelectAction',
+            'spec': z,
+          };
     }
 }

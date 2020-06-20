@@ -1,7 +1,9 @@
 import Konva from 'konva';
 import { Breadboard } from './components/breadboard';
 import { Contact } from './components/contact';
-import { address } from './address';
+import { address, Addressable } from './address';
+import { Selectable } from './actions/select_action';
+import { Component } from './components/component';
 
 let _stage: Konva.Stage | null = null;
 
@@ -17,9 +19,9 @@ export function stage(s?: Konva.Stage): Konva.Stage | null {
     return _stage;
 }
 
-export function getCursorPosition() {
+export function getCursorPosition(): Konva.Vector2d {
     let pos = stage()?.getPointerPosition();
-    if (pos == null) throw new Error('Cannot get pointer position');
+    if (pos == null) pos = {x: 0, y: 0};
     return pos;
 }
 
@@ -89,4 +91,30 @@ export function actionLayer(layer?: Konva.Layer): Konva.Layer|null {
 export function layerByName(name: string): Konva.Layer | null {
     if (name === 'action') return actionLayer();
     return defaultLayer();
+}
+
+let _selection: Selectable[] = [];
+export function selection(): Selectable[] {
+    return _selection;
+}
+
+export function selectionAddresses(): string[] {
+    return _selection
+    .filter(a => (a instanceof Component))
+    .map(a => address((a as any) as Addressable))
+    .sort();
+}
+
+export function clearSelection() {
+    for (const s of _selection) select(s, false);
+}
+
+export function select(x: Selectable, v?: boolean) {
+    if (v === undefined) v = true;
+    x.selected(v);
+    if (v) {
+        _selection.push(x);
+    } else {
+        _selection = _selection.filter(y => y != x);
+    }
 }

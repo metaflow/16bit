@@ -88,8 +88,8 @@ export class MoveWirePointAction implements Action {
       let p = this.points[i];
       p.x(this.original[i].x); 
       p.y(this.original[i].y);
+      p.wire().updateIntermediatePoints();
       p.wire().updateLayout();
-      // TODO: remove neighbours.
     }
   }
   mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean {

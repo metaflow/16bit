@@ -1,6 +1,6 @@
 import Konva from 'konva';
 import { Contact } from './contact';
-import { scale, toScreen, getPhysicalCursorPosition } from '../stage';
+import { scale, toScreen, getPhysicalCursorPosition, selection } from '../stage';
 import { Addressable, address, newAddress, addAddressRoot } from '../address';
 import { Selectable } from '../actions/select_action';
 import { Component } from './component';
@@ -40,8 +40,12 @@ export class WirePoint extends Component implements Selectable {
         this.selectionRect.on('mousedown', function (e) {
             console.log('click on wire point');
             e.cancelBubble = true;
-            point._helper = false;
-            appActions.current(new MoveWirePointAction([point], getPhysicalCursorPosition()));
+            if (point.selected()) {
+                const points: WirePoint[] = selection().filter(x => x instanceof WirePoint).map(x => x as any as WirePoint);
+                appActions.current(new MoveWirePointAction(points, getPhysicalCursorPosition()));
+            } else {
+                appActions.current(new MoveWirePointAction([point], getPhysicalCursorPosition()));
+            }            
         });
         this.selectionRect.attrs['address'] = address(this);
         this.shapes.add(this.selectionRect);
@@ -58,7 +62,7 @@ export class WirePoint extends Component implements Selectable {
         this.selectionRect.y(xy[1]);
         this.selectionRect.width(wirePointSize * scale());
         this.selectionRect.height(wirePointSize * scale());
-        this.selectionRect.stroke(this._helper ? 'green' : 'black');
+        this.selectionRect.stroke(this._selected ? 'red' : (this._helper ? 'green' : 'black'));
     }
     selected(v?: boolean): boolean {
         if (v !== undefined) {
