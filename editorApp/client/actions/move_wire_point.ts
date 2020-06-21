@@ -1,7 +1,7 @@
 import { Action, actionDeserializers } from '../action';
 import Konva from 'konva';
-import { stage, closesetContact, toPhysical, getPhysicalCursorPosition } from '../stage';
-import { ContactWire, WirePoint } from '../components/wire';
+import { stage, closesetContact, toPhysical, getPhysicalCursorPosition, selectionAddresses, select } from '../stage';
+import { ContactWire, WirePoint, WireSpec, WirePointSpec } from '../components/wire';
 import { Contact } from '../components/contact';
 import { address, getByAddress } from '../address';
 
@@ -38,17 +38,26 @@ interface spec {
   points: string[];
   from: [number, number];
   to: [number, number];
+  wires: string[];
+  oldWireStates: Map<string, WireSpec>;
 }
-
 
 export class MoveWirePointAction implements Action {
   actionType = "MoveWirePointAction";
-  original: WirePointState[] = [];
+  oldWireStates = new Map<string, WireSpec>();
+  newWireStates = new Map<string, WireSpec>();
+  original: WirePointSpec[] = [];
+  wires: string[];
   from: [number, number];
   to: [number, number];
   points: WirePoint[];
-  constructor(points: WirePoint[], origin?: [number, number]) {
-    for (const p of points) this.original.push(new WirePointState(p));
+  constructor(points: WirePoint[], origin?: [number, number]) {    
+    this.original = points.map(p => p.spec());
+    // TODO: make .address a method of Component.
+    this.wires = Array.from(new Set<string>(points.map(p => address(p.wire()))))
+    for (const w of this.wires) {
+      this.oldWireStates.set(w, (getByAddress(w) as ContactWire).spec());
+    }
     if (origin === undefined) origin = getPhysicalCursorPosition();
     this.from = origin;
     this.to = origin;
@@ -59,6 +68,8 @@ export class MoveWirePointAction implements Action {
       points: this.points.map(p => address(p)),
       from: this.from,
       to: this.to,
+      wires: this.wires,
+      oldWireStates: this.oldWireStates,
     };
     return {
       'typeMarker': 'MoveWirePointAction',
@@ -70,10 +81,12 @@ export class MoveWirePointAction implements Action {
     const dy = this.to[1] - this.from[1];
     for (let i = 0; i < this.points.length; i++) {
       let p = this.points[i];
-      p.x(this.original[i].x + dx); 
-      p.y(this.original[i].y + dy);
-      p.wire().updateLayout();
+      p.x(this.original[i].x! + dx); 
+      p.y(this.original[i].y! + dy);      
     }    
+    for (const w of this.wires) {
+      (getByAddress(w) as ContactWire).updateLayout();
+    }
   }
   apply(): void {
     this.updatePositions();
@@ -81,16 +94,16 @@ export class MoveWirePointAction implements Action {
     for (const p of this.points) {
       p.wire().updateIntermediatePoints();
       p.wire().updateLayout();
+    }
+    for (const w of this.wires) {
+      this.newWireStates.set(w, (getByAddress(w) as ContactWire).spec());
     }    
   }
   undo(): void {
-    for (let i = 0; i < this.points.length; i++) {
-      let p = this.points[i];
-      p.x(this.original[i].x); 
-      p.y(this.original[i].y);
-      p.wire().updateIntermediatePoints();
-      p.wire().updateLayout();
-    }
+    this.oldWireStates.forEach((v, k) => {
+      let w = (getByAddress(k) as ContactWire);
+      w.spec(v);
+    });
   }
   mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean {
     this.to = getPhysicalCursorPosition();
@@ -108,5 +121,4 @@ export class MoveWirePointAction implements Action {
   cancel(): void {
     this.undo();
   }
-
 }

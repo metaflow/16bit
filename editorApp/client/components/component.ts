@@ -1,5 +1,7 @@
 import { Addressable } from "../address";
 import Konva from "konva";
+import { Selectable } from "../actions/select_action";
+import { stage, select } from "../stage";
 
 export const componentDeserializers: {(data: any): (Component|null)}[] = [];
 
@@ -58,9 +60,14 @@ export abstract class Component implements Addressable {
         this.children.forEach(c => c.add(layer));
     }
     remove() {
-        if (this._parent !== null) this._parent.removeChild(this);
-        this.shapes.remove();
+        if (this._parent !== null) this._parent.removeChild(this);        
         this.children.forEach(v => v.remove());
+        this.shapes.remove();
+        if ((this as any).selectableInterface) {
+            // TODO: make select() accept 'any'.
+            console.log('deselect', this);
+            select((this as any as Selectable), false);
+        }
     }
     removeChild(x: Component) {
         this.children.delete(x.id());

@@ -1,24 +1,24 @@
 import Konva from 'konva';
 import { Contact } from './contact';
 import { scale, toScreen, getPhysicalCursorPosition, selection } from '../stage';
-import { Addressable, address, newAddress, addAddressRoot } from '../address';
+import { Addressable, address, newAddress, addAddressRoot, removeAddressRoot } from '../address';
 import { Selectable } from '../actions/select_action';
 import { Component } from './component';
 import { appActions } from '../action';
 import { MoveWirePointAction } from '../actions/move_wire_point';
 
-interface WirePointSpec {
+export interface WirePointSpec {
     id: string;
     x?: number;
     y?: number;
-    contact?: Contact|null;
+    contact?: Contact | null;
     wire: ContactWire;
     helper: boolean;
 }
 
 const wirePointSize = 3;
 
-export class WirePoint extends Component implements Selectable {    
+export class WirePoint extends Component implements Selectable {
     selectableInterface: true = true;
     _contact: Contact | null = null;
     selectionRect: Konva.Rect;
@@ -45,7 +45,7 @@ export class WirePoint extends Component implements Selectable {
                 appActions.current(new MoveWirePointAction(points, getPhysicalCursorPosition()));
             } else {
                 appActions.current(new MoveWirePointAction([point], getPhysicalCursorPosition()));
-            }            
+            }
         });
         this.selectionRect.attrs['address'] = address(this);
         this.shapes.add(this.selectionRect);
@@ -95,6 +95,11 @@ export class WirePoint extends Component implements Selectable {
 
 const wireWidth = 0.5;
 
+export interface WireSpec {
+    id: string;
+    points: WirePointSpec[];
+}
+
 export class ContactWire extends Component {
     line: Konva.Line;
     points: WirePoint[] = [];
@@ -108,7 +113,7 @@ export class ContactWire extends Component {
             strokeWidth: 1,
             lineCap: 'round',
             lineJoin: 'round',
-        });        
+        });
         this.shapes.add(this.line);
         this.updateIntermediatePoints();
         this.updateLayout();
@@ -137,14 +142,16 @@ export class ContactWire extends Component {
         // Iteracte over points and add to line.
         // If only two points: add intermediate one.
         // If 4+ points: remove all but one intermediate.
-        
         const specs = this.points.map(p => p.spec());
         console.log('update intermediate points', specs);
-        this.points.forEach(p => p.remove());
-        this.points = [];
+        // this.points.forEach(p => p.remove());
+        // this.points = [];
         let i = 0;
         let j = 1;
-        this.points.push(new WirePoint(specs[0]));
+        const keep = new Array<boolean>(specs.length);
+        console.log('keep', keep);
+        // this.points.push(new WirePoint(specs[0]));
+        keep[0] = true;
         while (j < specs.length) {
             if (specs[j].helper) {
                 j++; continue;
@@ -165,19 +172,52 @@ export class ContactWire extends Component {
                     j = k;
                     continue;
                 }
-            }            
-            this.points.push(new WirePoint({
-                    id: newAddress(this),
-                    wire: this,
-                    x: (xi + xj) / 2,
-                    y: (yi + yj) / 2,
-                    helper: true,
-                }));
-            specs[j].id = newAddress(this);
-            this.points.push(new WirePoint(specs[j]));
+            }
+            keep[j] = true;
             i = j;
             j = k;
         }
+        const pp = this.points;
+        const keepPoints: WirePoint[] = [];
+        this.points = [];
+        for (let k = 0; k < keep.length; k++) {
+            if (keep[k]) {
+                keepPoints.push(pp[k]);                
+            } else {
+                pp[k].remove();
+            }
+        }
+        for (let k = 0; k < keepPoints.length; k++) {
+            if (k > 0) {
+                this.points.push(new WirePoint({
+                    id: newAddress(this),
+                    wire: this,
+                    x: (keepPoints[k - 1].x() + keepPoints[k].x()) / 2,
+                    y: (keepPoints[k - 1].y() + keepPoints[k].y()) / 2,
+                    helper: true,
+                }));
+            }
+            this.points.push(keepPoints[k]);
+        }
         console.log('updated points intermediate points', this.points.map(p => p.spec()));
+    }
+
+    serialize(): any {
+        return {
+            'typeMarker': 'ContactWire',
+            'spec': this.spec(),
+        }
+    }
+    spec(s?: WireSpec): WireSpec {
+        if (s !== undefined) {
+            this.points.forEach(p => p.remove());
+            this.points = s.points.map(x => new WirePoint(x));
+            this.updateIntermediatePoints();
+            this.updateLayout();
+        }
+        return {
+            id: this.id(),
+            points: this.points.map(p => p.spec()),
+        };
     }
 }

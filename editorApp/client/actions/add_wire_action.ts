@@ -28,8 +28,10 @@ export class AddContactWireAction implements Action {
         return false;
     }
     apply() {
-        if (this.wire == null) return;
+        this.wire = new ContactWire(newAddress(), this.c1, this.c2!);
         this.wire.add(defaultLayer());
+        this.line.remove();
+        addAddressRoot(this.wire);
     }
 
     undo() {
@@ -50,10 +52,7 @@ export class AddContactWireAction implements Action {
 
     complete(c2: Contact) {
         this.c2 = c2;
-        this.wire = new ContactWire(newAddress(), this.c1, c2);
-        this.wire.add(defaultLayer());
-        this.line.remove();
-        addAddressRoot(this.wire);
+        this.apply();        
     }
 
     mousedown(event: Konva.KonvaEventObject<MouseEvent>): boolean {
