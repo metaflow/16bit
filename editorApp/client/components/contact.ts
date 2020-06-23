@@ -14,13 +14,20 @@ export class Contact extends Component {
         super(id, parent);
         this.x(x);
         this.y(y);
-        addContact(this);
         this.circle = new Konva.Circle({
             radius: 1,
         });
         this.shapes.add(this.circle);
         this.setupEvents();
         this.updateLayout();
+    }
+    materialize() {
+        super.materialize();
+        addContact(this);
+    }
+    vanish() {
+        super.vanish();
+        // TODO: removeContact(this);
     }
     setupEvents() {
         const c = this;

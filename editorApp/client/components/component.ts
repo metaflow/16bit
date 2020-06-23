@@ -1,4 +1,4 @@
-import { Addressable } from "../address";
+import { Addressable, address, addAddressRoot, removeAddressRoot } from "../address";
 import Konva from "konva";
 import { Selectable } from "../actions/select_action";
 import { stage, select } from "../stage";
@@ -14,19 +14,33 @@ export abstract class Component implements Addressable {
     shapes = new Konva.Group();
     _mainColor = 'black';
     typeMarker: string = 'Component';
-    constructor(id: string, parent?: Component) {
+    constructor(id: string, parent?: Component|null) {
         this._id = id;
-        if (parent !== undefined) {
-            this.parent(parent);
-            parent.addChild(this);
+        this.parent(parent);
+        if (this._parent != null) this._parent.addChild(this);
+    }
+    materialize() {
+        if (this._parent == null) addAddressRoot(this);
+        this.children.forEach(c => c.materialize());        
+    }
+    vanish() {
+        this.children.forEach(c => c.vanish());
+        if (this._parent == null) {
+            removeAddressRoot(this.id());
+        }
+        this.shapes.remove();
+        if ((this as any).selectableInterface) {
+            // TODO: make select() accept 'any'.
+            console.log('deselect', this);
+            select((this as any as Selectable), false);
         }
     }
-    parent(p?: Component): Component|null {
+    parent(p?: Component|null): Component|null {
         if (p !== undefined) this._parent = p;
         return this._parent;
     }
     addChild(c: Component) {
-        this.shapes.add(c.shapes);
+        // this.shapes.add(c.shapes);
         if (this.children.has(c.id())) {
             throw new Error(`child with id "${c.id()}" already present`);
         }
@@ -37,6 +51,9 @@ export abstract class Component implements Addressable {
     }
     addressChild(id: string): Addressable | null | undefined {
         return this.children.get(id);
+    }
+    address(): string {
+        return address(this);
     }
     id(): string {
         return this._id;
@@ -60,14 +77,11 @@ export abstract class Component implements Addressable {
         this.children.forEach(c => c.add(layer));
     }
     remove() {
-        if (this._parent !== null) this._parent.removeChild(this);        
-        this.children.forEach(v => v.remove());
-        this.shapes.remove();
-        if ((this as any).selectableInterface) {
-            // TODO: make select() accept 'any'.
-            console.log('deselect', this);
-            select((this as any as Selectable), false);
-        }
+        this.children.forEach(v => v.remove());        
+
+        if (this._parent != null) {
+            this._parent.removeChild(this)
+        }        
     }
     removeChild(x: Component) {
         this.children.delete(x.id());

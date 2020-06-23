@@ -1,7 +1,7 @@
 import Konva from 'konva';
 import { Breadboard } from './components/breadboard';
 import { Contact } from './components/contact';
-import { address, Addressable } from './address';
+import { address, Addressable, roots } from './address';
 import { Selectable } from './actions/select_action';
 import { Component } from './components/component';
 
@@ -117,4 +117,20 @@ export function select(x: Selectable, v?: boolean) {
     } else {
         _selection = _selection.filter(y => y != x);
     }
+}
+
+export interface StageState {
+    components: any[];
+    selection: string[];
+}
+
+export function fullState(): StageState {
+     let z: StageState = {
+        components: [],
+        selection: selectionAddresses(),
+     }
+     roots.forEach((v, k) => {
+         z.components.push((v as Component).serialize());
+     })
+     return z;
 }

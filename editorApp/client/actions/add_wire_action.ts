@@ -1,9 +1,9 @@
 import Konva from 'konva';
 import { ContactWire } from '../components/wire';
 import { Action, actionDeserializers } from '../action';
-import { stage, toPhysical, closesetContact, toScreen, actionLayer, defaultLayer } from '../stage';
+import { closesetContact, toScreen, actionLayer, defaultLayer } from '../stage';
 import { Contact } from '../components/contact';
-import { address, getByAddress, addAddressRoot, removeAddressRoot, newAddress } from '../address';
+import { address, getByAddress, removeAddressRoot, newAddress } from '../address';
 
 export class AddContactWireAction implements Action {
     actionType = "AddContactWireAction";
@@ -31,7 +31,6 @@ export class AddContactWireAction implements Action {
         this.wire = new ContactWire(newAddress(), this.c1, this.c2!);
         this.wire.add(defaultLayer());
         this.line.remove();
-        addAddressRoot(this.wire);
     }
 
     undo() {

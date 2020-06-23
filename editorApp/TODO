@@ -1,4 +1,4 @@
-- separate action for layers
+- store full state for each history item and check if undo / redo keeps it
 - schematic serealization
 - schematic
     - toolbar to add components

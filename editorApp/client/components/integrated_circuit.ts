@@ -1,8 +1,7 @@
 import { Component } from "./component";
 import Konva from "konva";
 import { toScreen, scale } from "../stage";
-import { Layer } from "konva/types/Layer";
-import { addAddressRoot, newAddress } from "../address";
+import { newAddress } from "../address";
 import { Contact } from "./contact";
 
 const gap = 1;

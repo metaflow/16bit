@@ -1,18 +1,19 @@
 import Konva from 'konva';
 import { Contact } from './contact';
 import { scale, toScreen, getPhysicalCursorPosition, selection } from '../stage';
-import { Addressable, address, newAddress, addAddressRoot, removeAddressRoot } from '../address';
+import {  address, newAddress, getTypedByAddress } from '../address';
 import { Selectable } from '../actions/select_action';
 import { Component } from './component';
 import { appActions } from '../action';
 import { MoveWirePointAction } from '../actions/move_wire_point';
+import assertExists from 'ts-assert-exists';
 
 export interface WirePointSpec {
     id: string;
     x?: number;
     y?: number;
-    contact?: Contact | null;
-    wire: ContactWire;
+    contact?: string | null;
+    wire: string;
     helper: boolean;
 }
 
@@ -26,9 +27,10 @@ export class WirePoint extends Component implements Selectable {
     _wire: ContactWire;
     _helper: boolean;
     constructor(spec: WirePointSpec) {
-        super(spec.id, spec.wire);
-        this._wire = spec.wire;
-        if (spec.contact !== undefined) this._contact = spec.contact;
+        // TODO: make it accept Wire type parent as well.
+        super(spec.id, getTypedByAddress(ContactWire, spec.wire));
+        this._wire = assertExists(getTypedByAddress(ContactWire, spec.wire));
+        if (spec.contact != null) this._contact = getTypedByAddress(Contact, spec.contact);
         if (spec.x !== undefined) this.x(spec.x);
         if (spec.y !== undefined) this.y(spec.y);
         this._helper = spec.helper;
@@ -86,8 +88,8 @@ export class WirePoint extends Component implements Selectable {
             id: this.id(),
             x: this.x(),
             y: this.y(),
-            contact: this.contact(),
-            wire: this.wire(),
+            contact: this.contact()?.address(),
+            wire: this.wire().address(),
             helper: this._helper,
         }
     }
@@ -105,8 +107,8 @@ export class ContactWire extends Component {
     points: WirePoint[] = [];
     constructor(id: string, c1: Contact, c2: Contact) {
         super(id);
-        this.points.push(new WirePoint({ id: newAddress(this), wire: this, contact: c1, helper: false }));
-        this.points.push(new WirePoint({ id: newAddress(this), wire: this, contact: c2, helper: false }));
+        this.points.push(new WirePoint({ id: newAddress(this), wire: this.address(), contact: c1.address(), helper: false }));
+        this.points.push(new WirePoint({ id: newAddress(this), wire: this.address(), contact: c2.address(), helper: false }));
         this.line = new Konva.Line({
             points: [],
             stroke: 'blue',
@@ -191,7 +193,7 @@ export class ContactWire extends Component {
             if (k > 0) {
                 this.points.push(new WirePoint({
                     id: newAddress(this),
-                    wire: this,
+                    wire: this.address(),
                     x: (keepPoints[k - 1].x() + keepPoints[k].x()) / 2,
                     y: (keepPoints[k - 1].y() + keepPoints[k].y()) / 2,
                     helper: true,

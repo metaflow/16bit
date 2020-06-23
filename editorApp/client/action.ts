@@ -1,6 +1,7 @@
 import Konva from 'konva';
 import { AddContactWireAction } from './actions/add_wire_action';
 import { PlaceComponentAction } from './actions/add_ic_action';
+import { fullState, StageState } from './stage';
 
 export const actionDeserializers: {(data: any): (Action|null)}[] = [];
 
@@ -20,11 +21,16 @@ interface serializedAction {
     data: any;
 }
 
+const debugActions = true;
+
 export class Actions {
     private _current: Action | null = null;
     private readonly history: Action[] = [];
     private readonly forwardHistory: Action[] = [];
-
+    stateHistory: StageState[] = [];
+    constructor() {
+        this.stateHistory.push(fullState());
+    }
     current(a?: Action | null): Action | null {
         if (a !== undefined) this._current = a;
         return this._current;
@@ -50,7 +56,30 @@ export class Actions {
         this.history.push(a);
         this.forwardHistory.splice(0, this.forwardHistory.length);
         this.current(null);
-        console.log('commit', this.current())
+        a.apply();
+        if (debugActions) {
+            let sa = this.stateHistory[this.stateHistory.length - 1];
+            let sb = fullState();        
+            this.stateHistory.push(sb);           
+            console.log('full state', JSON.stringify(sb));
+            a.undo();
+            let sc = fullState();
+            a.apply();
+            let sd = fullState();
+            if (JSON.stringify(sa) != JSON.stringify(sc)) {
+                console.error('undo of ', a, 'changes state');
+                console.log('initial');
+                console.log(sa);
+                console.log('undo');
+                console.log(sc);
+            }
+            if (JSON.stringify(sb) != JSON.stringify(sd)) {
+                console.error('undo -> redo of ', a, 'changes state');
+                console.log(sb);
+                console.log('undo / redo');
+                console.log(sd);
+            }
+        }        
         this.save();
     }
     undo() {

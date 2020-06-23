@@ -16,7 +16,8 @@
     "http-errors": "~1.6.3",
     "konva": "^6.0.0",
     "morgan": "~1.9.1",
-    "pug": "2.0.0-beta11"
+    "pug": "2.0.0-beta11",
+    "ts-assert-exists": "^1.0.5"
   },
   "devDependencies": {
     "browserify": "^16.5.1",

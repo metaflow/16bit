@@ -2,14 +2,20 @@ import Konva from 'konva';
 import hotkeys from 'hotkeys-js';
 import { appActions } from './action';
 import { stage, defaultLayer, actionLayer } from './stage';
-import { Breadboard } from './components/breadboard';
-import { addAddressRoot, newAddress } from './address';
+import { newAddress } from './address';
 import { SelectAction } from './actions/select_action';
-import { IntegratedCircuit } from './components/integrated_circuit';
-import { IntegratedCircuitSchematic } from './components/IC_schematic';
 import { ic74x245 } from './components/74x245';
 import { PlaceComponentAction } from './actions/add_ic_action';
-import { Contact } from './components/contact';
+
+(window as any).add245 = function () {
+  console.log('add 245');
+  appActions.current(new PlaceComponentAction(new ic74x245({ id: newAddress(), x: 0, y: 0})));
+};
+
+(window as any).clearActionsHistory = function () {
+  localStorage.setItem('actions_history', JSON.stringify([]));
+};
+
 
 // first we need to create a stage
 stage(new Konva.Stage({
@@ -72,30 +78,7 @@ hotkeys('ctrl+shift+z', function (e) {
   actionLayer()?.batchDraw();
 });
 
-let bb = new Breadboard('bb1', 10, 10);
-bb.add(defaultLayer());
-addAddressRoot(bb);
-
-let ic = new IntegratedCircuit({
-  id: "ic",
-  x: 5,
-  y: 100,
-  layer: defaultLayer(),
-  pins: ['a', 'b', 'c', 'd', 'e', 'f', 'a', 'b', 'c', 'd', 'e', 'f'],
-  label: '74AHTC155',
-});
-ic.add(defaultLayer());
-addAddressRoot(ic);
-
-let ic2 = new ic74x245({ id: "ic2", x: 50, y: 100 });
-ic2.add(defaultLayer());
-addAddressRoot(ic2);
-
 appActions.load();
 defaultLayer()?.batchDraw();
 actionLayer()?.batchDraw();
 
-(window as any).add245 = function () {
-  console.log('add 245');
-  appActions.current(new PlaceComponentAction(new ic74x245({ id: newAddress(), x: 0, y: 0})));
-}
