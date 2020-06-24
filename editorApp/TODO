@@ -1,4 +1,4 @@
-- store full state for each history item and check if undo / redo keeps it
+- make selection an action
 - schematic serealization
 - schematic
     - toolbar to add components

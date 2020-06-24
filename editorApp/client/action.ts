@@ -1,9 +1,8 @@
 import Konva from 'konva';
-import { AddContactWireAction } from './actions/add_wire_action';
-import { PlaceComponentAction } from './actions/add_ic_action';
 import { fullState, StageState } from './stage';
+import {diffString} from 'json-diff';
 
-export const actionDeserializers: {(data: any): (Action|null)}[] = [];
+export const actionDeserializers: { (data: any): (Action | null) }[] = [];
 
 export interface Action {
     actionType: string;
@@ -53,33 +52,33 @@ export class Actions {
     commit() {
         const a = this.current();
         if (a == null) return;
+        console.log('applying', a);
         this.history.push(a);
         this.forwardHistory.splice(0, this.forwardHistory.length);
         this.current(null);
         a.apply();
+        console.log(fullState());
         if (debugActions) {
             let sa = this.stateHistory[this.stateHistory.length - 1];
-            let sb = fullState();        
-            this.stateHistory.push(sb);           
-            console.log('full state', JSON.stringify(sb));
+            let sb = fullState();
+            this.stateHistory.push(sb);            
+            console.log('undo');
             a.undo();
+            console.log(fullState());
             let sc = fullState();
-            a.apply();
-            let sd = fullState();
             if (JSON.stringify(sa) != JSON.stringify(sc)) {
-                console.error('undo of ', a, 'changes state');
-                console.log('initial');
-                console.log(sa);
-                console.log('undo');
-                console.log(sc);
+                console.error('undo changes state');
+                console.log(diffString(sa, sc));
             }
+            console.log('redo');
+            a.apply();          
+            console.log(fullState());  
+            let sd = fullState();
             if (JSON.stringify(sb) != JSON.stringify(sd)) {
-                console.error('undo -> redo of ', a, 'changes state');
-                console.log(sb);
-                console.log('undo / redo');
-                console.log(sd);
+                console.error('redo changes state');
+                console.log(diffString(sb, sd));
             }
-        }        
+        }
         this.save();
     }
     undo() {
@@ -114,7 +113,7 @@ export class Actions {
         if (s === null) return;
         let h = JSON.parse(s);
         for (const data of h) {
-            let a: Action|null = null;
+            let a: Action | null = null;
             for (const d of actionDeserializers) {
                 a = d(data);
                 if (a !== null) break;
@@ -123,7 +122,11 @@ export class Actions {
                 console.error(`Cannot apply deserialized action "${data}"`);
                 break;
             }
+            a.apply();
             this.history.push(a);
+            if (debugActions) {
+                this.stateHistory.push(fullState());
+            }
         }
     }
 }

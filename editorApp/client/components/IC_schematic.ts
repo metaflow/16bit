@@ -54,8 +54,8 @@ export class IntegratedCircuitSchematic extends Component {
             this.left_labels.push(t);
             this.shapes.add(t);
             if (s === "") continue;
-            const c = new Contact(s, - pin_length, (i + 0.5) * contact_height + gap, this);
-            this.contacts.push(c);
+            const c = new Contact(s, - pin_length, (i + 0.5) * contact_height + gap);
+            this.contacts.push(this.addChild(c));
             this.pin_lines.push(new Konva.Line({ points: [0, 0, 0, 0], stroke: 'black' }));
         }
         for (let i = 0; i < this.right_pins.length; i++) {
@@ -64,8 +64,8 @@ export class IntegratedCircuitSchematic extends Component {
             this.right_labels.push(t);
             this.shapes.add(t);
             if (s === "") continue;
-            const c = new Contact(s, width + pin_length, (i + 0.5) * contact_height + gap, this);
-            this.contacts.push(c);
+            const c = new Contact(s, width + pin_length, (i + 0.5) * contact_height + gap);            
+            this.contacts.push(this.addChild(c));
             this.pin_lines.push(new Konva.Line({ points: [0, 0, 0, 0], stroke: 'black' }));
         }
         for (const x of this.pin_lines) this.shapes.add(x);

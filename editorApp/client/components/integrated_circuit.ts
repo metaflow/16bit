@@ -36,10 +36,13 @@ export class IntegratedCircuit extends Component {
         }
         const w = Math.floor((this.pins.length + 1) / 2);
         for (let i = 0; i < w; i++) {
-            this.contacts.push(new Contact(newAddress(this), (i + 0.5) * contact_width + gap, height + pin_length, this));
+            const c = new Contact(newAddress(this), (i + 0.5) * contact_width + gap, height + pin_length);
+            this.contacts.push(this.addChild(c));
         }
         for (let i = w; i < this.pins.length; i++) {
-            this.contacts.push(new Contact(newAddress(this), (this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length, this));
+            let c = new Contact(newAddress(this), (this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length);
+            this.addChild(c);
+            this.contacts.push(c);
         }
         this.name = new Konva.Text({ text: spec.label, align: 'center' });
         this.shapes.add(this.name);

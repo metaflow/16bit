@@ -14,7 +14,6 @@ actionDeserializers.push(function(data: any): Action|null {
     let z = new SelectAction();
     z.newSelection = s.newSelection;
     z.prevSelection = s.prevSelection;
-    z.apply();
     return z;
   });
 
@@ -60,6 +59,7 @@ export class SelectAction implements Action {
         this.newSelection = [];
         for (const s of selected) {            
             const a = s.attrs['address'];
+            console.log('selected address', a);
             this.newSelection.push(a);
             const x = getByAddress(a);
             console.log(a, x);

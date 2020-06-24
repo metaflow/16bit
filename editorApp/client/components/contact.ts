@@ -2,7 +2,6 @@ import { Addressable, newAddress } from "../address";
 import Konva from "konva";
 import { appActions } from "../action";
 import { AddContactWireAction } from "../actions/add_wire_action";
-import { Breadboard } from "./breadboard";
 import { scale, addContact } from "../stage";
 import { Component } from "./component";
 
@@ -10,8 +9,8 @@ const radius = 0.8;
 
 export class Contact extends Component {
     circle: Konva.Circle;
-    constructor(id: string, x: number, y: number, parent?: Component) {
-        super(id, parent);
+    constructor(id: string, x: number, y: number) {
+        super(id);
         this.x(x);
         this.y(y);
         this.circle = new Konva.Circle({
@@ -21,13 +20,17 @@ export class Contact extends Component {
         this.setupEvents();
         this.updateLayout();
     }
-    materialize() {
-        super.materialize();
-        addContact(this);
-    }
-    vanish() {
-        super.vanish();
-        // TODO: removeContact(this);
+    materialized(b?:boolean): boolean {
+        const p = this._materialized;
+        const z = super.materialized(b);
+        if (p != z) {
+            if (z)  {
+                addContact(this);
+            } else {
+                // TODO: remove contact.
+            }
+        }        
+        return z;
     }
     setupEvents() {
         const c = this;

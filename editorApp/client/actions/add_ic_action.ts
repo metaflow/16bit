@@ -11,7 +11,6 @@ actionDeserializers.push(function(data: any): Action|null {
     let z = new PlaceComponentAction(c);
     z.x = z.component.x();
     z.y = z.component.y();
-    z.apply();
     return z;
 });
 
@@ -24,18 +23,19 @@ export class PlaceComponentAction implements Action {
         this.component = component;
         this.component.mainColor('red');
         this.component.updateLayout();
-        this.component.add(actionLayer());
+        this.component.show(actionLayer());
     }
     apply(): void {
         this.component.x(this.x);
         this.component.y(this.y);
         this.component.mainColor('black');
         this.component.updateLayout();
-        this.component.add(defaultLayer());
-        this.component.materialize();
+        this.component.show(defaultLayer());
+        this.component.materialized(true);
     }
     undo(): void {
-        this.component.vanish();        
+        this.component.materialized(false);
+        this.component.hide();
     }
     mousemove(event: KonvaEventObject<MouseEvent>): boolean {        
         [this.x, this.y] = getPhysicalCursorPosition();

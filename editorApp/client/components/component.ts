@@ -3,7 +3,7 @@ import Konva from "konva";
 import { Selectable } from "../actions/select_action";
 import { stage, select } from "../stage";
 
-export const componentDeserializers: {(data: any): (Component|null)}[] = [];
+export const componentDeserializers: { (data: any): (Component | null) }[] = [];
 
 export abstract class Component implements Addressable {
     _id = '';
@@ -14,74 +14,94 @@ export abstract class Component implements Addressable {
     shapes = new Konva.Group();
     _mainColor = 'black';
     typeMarker: string = 'Component';
-    constructor(id: string, parent?: Component|null) {
+    _materialized = false; // If this component really "exists" and accessabe from the address root.
+    constructor(id: string) {
         this._id = id;
-        this.parent(parent);
-        if (this._parent != null) this._parent.addChild(this);
+
     }
-    materialize() {
-        if (this._parent == null) addAddressRoot(this);
-        this.children.forEach(c => c.materialize());        
-    }
-    vanish() {
-        this.children.forEach(c => c.vanish());
-        if (this._parent == null) {
-            removeAddressRoot(this.id());
+    materialized(b?: boolean): boolean {
+        if (b === undefined) return this._materialized;
+        if (this._materialized == b) return b;
+        this._materialized = b;
+        if (b && this._parent == null) addAddressRoot(this);
+        this.children.forEach(c => c.materialized(b));
+        if (!b) {
+            if (this._parent == null) {
+                removeAddressRoot(this.id());
+            }
+            if ((this as any).selectableInterface) {
+                // TODO: make select() accept 'any'.
+                select((this as any as Selectable), false);
+            }
         }
-        this.shapes.remove();
-        if ((this as any).selectableInterface) {
-            // TODO: make select() accept 'any'.
-            console.log('deselect', this);
-            select((this as any as Selectable), false);
-        }
+        return this._materialized;
     }
-    parent(p?: Component|null): Component|null {
-        if (p !== undefined) this._parent = p;
+    parent(p?: Component | null): Component | null {
+        if (p !== undefined) {
+            const x = this._parent;
+            if (x != null) {
+                x.removeChild(this);
+            }
+            this._parent = p;
+            if (p != null) {
+                this.materialized(p.materialized());
+            }
+        }
         return this._parent;
     }
-    addChild(c: Component) {
+    addChild<T extends Component>(c: T): T {
         // this.shapes.add(c.shapes);
         if (this.children.has(c.id())) {
             throw new Error(`child with id "${c.id()}" already present`);
         }
+        c.parent(this);
         this.children.set(c.id(), c);
+        c.mainColor(this.mainColor());
+        c.show(this.shapes.getLayer() as Konva.Layer);
+        c.materialized(this.materialized());
+        return c;
     }
-    addressParent(): Addressable | null {
+    addressParent(): Addressable | null { // TODO: remove
         return this.parent();
     }
     addressChild(id: string): Addressable | null | undefined {
         return this.children.get(id);
     }
     address(): string {
+        if (!this._materialized) {
+            console.error(this, 'is not materialized');
+        }
         return address(this);
     }
     id(): string {
         return this._id;
     }
-    x(newX?: number) : number {
+    x(newX?: number): number {
         if (newX !== undefined) {
             this._x = newX;
         }
         if (this._parent != null) return this._parent.x() + this._x;
         return this._x;
     }
-    y(newY?: number) : number {
+    y(newY?: number): number {
         if (newY !== undefined) {
             this._y = newY;
         }
         if (this._parent != null) return this._parent.y() + this._y;
         return this._y;
     }
-    add(layer: Konva.Layer|null) {
+    show(layer: Konva.Layer | null) {
         this.shapes.moveTo(layer);
-        this.children.forEach(c => c.add(layer));
+        this.children.forEach(c => c.show(layer));
+    }
+    hide() {
+        this.shapes.remove();
     }
     remove() {
-        this.children.forEach(v => v.remove());        
-
-        if (this._parent != null) {
-            this._parent.removeChild(this)
-        }        
+        this.hide();
+        this.children.forEach(v => v.remove());
+        this.materialized(false);
+        this.parent(null);
     }
     removeChild(x: Component) {
         this.children.delete(x.id());
@@ -98,10 +118,10 @@ export abstract class Component implements Addressable {
     }
     serialize(): any {
         return {}
-    } 
+    }
 }
 
-export function deserializeComponent(data: any): (Component|null) {
+export function deserializeComponent(data: any): (Component | null) {
     for (const d of componentDeserializers) {
         let c = d(data);
         if (c !== null) return c;

@@ -24,18 +24,22 @@ export class AddContactWireAction implements Action {
         });
         actionLayer()?.add(this.line);
     }
-    mouseup(event: import("konva/types/Node").KonvaEventObject<MouseEvent>): boolean {
+    mouseup(event: Konva.KonvaEventObject<MouseEvent>): boolean {
         return false;
     }
     apply() {
-        this.wire = new ContactWire(newAddress(), this.c1, this.c2!);
-        this.wire.add(defaultLayer());
+        const a = newAddress();
+        console.log('add wire', a);
+        this.wire = new ContactWire(a, this.c1, this.c2!);
+        this.wire.materialized(true);
+        this.wire.show(defaultLayer());
         this.line.remove();
     }
 
     undo() {
         if (this.wire == null) return;
-        this.wire.remove();
+        this.wire.materialized(false);
+        this.wire.hide();
     }
 
     mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean {
@@ -50,8 +54,7 @@ export class AddContactWireAction implements Action {
     }
 
     complete(c2: Contact) {
-        this.c2 = c2;
-        this.apply();        
+        this.c2 = c2;        
     }
 
     mousedown(event: Konva.KonvaEventObject<MouseEvent>): boolean {

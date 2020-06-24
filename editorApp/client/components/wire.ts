@@ -1,7 +1,7 @@
 import Konva from 'konva';
 import { Contact } from './contact';
 import { scale, toScreen, getPhysicalCursorPosition, selection } from '../stage';
-import {  address, newAddress, getTypedByAddress } from '../address';
+import { address, newAddress, getTypedByAddress } from '../address';
 import { Selectable } from '../actions/select_action';
 import { Component } from './component';
 import { appActions } from '../action';
@@ -9,11 +9,11 @@ import { MoveWirePointAction } from '../actions/move_wire_point';
 import assertExists from 'ts-assert-exists';
 
 export interface WirePointSpec {
+    address?: string;
     id: string;
     x?: number;
     y?: number;
     contact?: string | null;
-    wire: string;
     helper: boolean;
 }
 
@@ -24,12 +24,9 @@ export class WirePoint extends Component implements Selectable {
     _contact: Contact | null = null;
     selectionRect: Konva.Rect;
     _selected: boolean = false;
-    _wire: ContactWire;
     _helper: boolean;
     constructor(spec: WirePointSpec) {
-        // TODO: make it accept Wire type parent as well.
-        super(spec.id, getTypedByAddress(ContactWire, spec.wire));
-        this._wire = assertExists(getTypedByAddress(ContactWire, spec.wire));
+        super(spec.id);
         if (spec.contact != null) this._contact = getTypedByAddress(Contact, spec.contact);
         if (spec.x !== undefined) this.x(spec.x);
         if (spec.y !== undefined) this.y(spec.y);
@@ -48,10 +45,16 @@ export class WirePoint extends Component implements Selectable {
             } else {
                 appActions.current(new MoveWirePointAction([point], getPhysicalCursorPosition()));
             }
-        });
-        this.selectionRect.attrs['address'] = address(this);
+        });       
         this.shapes.add(this.selectionRect);
         this.updateLayout();
+    }
+    materialized(b?: boolean): boolean {        
+        let z = super.materialized(b);  
+        if (z) {
+            this.selectionRect.attrs['address'] = this.address(); // TODO: make address() check that this component is accessible from the root.
+        }
+        return z;
     }
     updateLayout() {
         super.updateLayout();
@@ -81,15 +84,15 @@ export class WirePoint extends Component implements Selectable {
         return this._contact;
     }
     wire(): ContactWire {
-        return this._wire;
+        return this.parent() as ContactWire;
     }
     spec(): WirePointSpec {
         return {
             id: this.id(),
+            address: this.materialized() ? this.address() : undefined,
             x: this.x(),
             y: this.y(),
             contact: this.contact()?.address(),
-            wire: this.wire().address(),
             helper: this._helper,
         }
     }
@@ -107,8 +110,8 @@ export class ContactWire extends Component {
     points: WirePoint[] = [];
     constructor(id: string, c1: Contact, c2: Contact) {
         super(id);
-        this.points.push(new WirePoint({ id: newAddress(this), wire: this.address(), contact: c1.address(), helper: false }));
-        this.points.push(new WirePoint({ id: newAddress(this), wire: this.address(), contact: c2.address(), helper: false }));
+        this.points.push(this.addChild(new WirePoint({ id: newAddress(this), contact: c1.address(), helper: false })));
+        this.points.push(this.addChild(new WirePoint({ id: newAddress(this), contact: c2.address(), helper: false })));
         this.line = new Konva.Line({
             points: [],
             stroke: 'blue',
@@ -184,26 +187,24 @@ export class ContactWire extends Component {
         this.points = [];
         for (let k = 0; k < keep.length; k++) {
             if (keep[k]) {
-                keepPoints.push(pp[k]);                
+                keepPoints.push(pp[k]);
             } else {
                 pp[k].remove();
             }
         }
         for (let k = 0; k < keepPoints.length; k++) {
             if (k > 0) {
-                this.points.push(new WirePoint({
+                this.points.push(this.addChild(new WirePoint({
                     id: newAddress(this),
-                    wire: this.address(),
                     x: (keepPoints[k - 1].x() + keepPoints[k].x()) / 2,
                     y: (keepPoints[k - 1].y() + keepPoints[k].y()) / 2,
                     helper: true,
-                }));
+                })));
             }
             this.points.push(keepPoints[k]);
         }
         console.log('updated points intermediate points', this.points.map(p => p.spec()));
     }
-
     serialize(): any {
         return {
             'typeMarker': 'ContactWire',
@@ -211,15 +212,16 @@ export class ContactWire extends Component {
         }
     }
     spec(s?: WireSpec): WireSpec {
+        let o = this;
         if (s !== undefined) {
-            this.points.forEach(p => p.remove());
-            this.points = s.points.map(x => new WirePoint(x));
-            this.updateIntermediatePoints();
-            this.updateLayout();
+            o.points.forEach(p => p.remove());
+            o.points = s.points.map(x => o.addChild(new WirePoint(x)));
+            o.updateIntermediatePoints();
+            o.updateLayout();
         }
         return {
-            id: this.id(),
-            points: this.points.map(p => p.spec()),
+            id: o.id(),
+            points: o.points.map(p => p.spec()),
         };
     }
 }

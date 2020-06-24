@@ -16,6 +16,7 @@ export function addAddressRoot(r: Addressable) {
 }
 
 export function removeAddressRoot(id: string) {
+    console.log('remove address root', id)
     if (!roots.has(id)) {
         console.error(`address root "${id}" does not exist`);
         return;
@@ -46,14 +47,18 @@ function typeGuard<T extends PrimitiveOrConstructor>(o: any, className: T):
 }
 
 
-export function getTypedByAddress<T>(q: {new(...args: any[]): T}, address: string): T|null {
+export function getTypedByAddress<T>(q: {new(...args: any[]): T}, address?: string): T|null {
     let t = getByAddress(address);
     if (typeGuard(t, q)) return t as T;
     console.error(t, 'is not an instance of', q);
     return null;
 }
 
-export function getByAddress(address: string): any|null {
+export function getByAddress(address?: string): any|null {
+    if (address == null) {
+        console.error('passed address is null', address);
+        return null;
+    }
     const parts = address.split(':');
     let t: Addressable|null|undefined = roots.get(parts[0]);
     if (t == null) {
@@ -76,7 +81,7 @@ export function newAddress(p?: Component): string {
         return '' + i;
     }    
     let i = 0;
-    while (roots.has(''+i)) i++;
+    while (roots.has(''+i)) i++;    
     return "" + i;
 }
 
