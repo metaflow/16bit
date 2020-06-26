@@ -1,15 +1,11 @@
 import Konva from 'konva';
 import { scale } from '../stage';
-import { appActions } from '../action';
-import { AddContactWireAction } from '../actions/add_wire_action';
-import { Addressable, address } from '../address';
 import { Contact } from './contact';
 import { Component } from './component';
 
 const p_width = 170.5;
 const p_height = 63.1;
 const p_contact = 2.54;
-const p_gap = 3 * p_contact;
 
 export class Breadboard extends Component {
 

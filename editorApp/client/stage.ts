@@ -44,7 +44,11 @@ export function toPhysical(x: number, y: number): [number, number] {
 
 const contacts = new Map<string, Contact>();
 export function addContact(c: Contact) {
-    contacts.set(address(c), c);
+    contacts.set(c.address(), c);
+}
+
+export function removeContact(c: Contact) {
+    contacts.delete(c.address());
 }
 
 export function distance(c: [number, number, number, number]): number {
@@ -109,9 +113,9 @@ export function clearSelection() {
     for (const s of _selection) select(s, false);
 }
 
-export function select(x: Selectable, v?: boolean) {
+export function select(x: any, v?: boolean) {
     if (v === undefined) v = true;
-    x.selected(v);
+    (x as Selectable).selected(v);
     if (v) {
         _selection.push(x);
     } else {

@@ -11,8 +11,8 @@ import assertExists from 'ts-assert-exists';
 export interface WirePointSpec {
     address?: string;
     id: string;
-    x?: number;
-    y?: number;
+    x: number;
+    y: number;
     contact?: string | null;
     helper: boolean;
 }
@@ -110,8 +110,8 @@ export class ContactWire extends Component {
     points: WirePoint[] = [];
     constructor(id: string, c1: Contact, c2: Contact) {
         super(id);
-        this.points.push(this.addChild(new WirePoint({ id: newAddress(this), contact: c1.address(), helper: false })));
-        this.points.push(this.addChild(new WirePoint({ id: newAddress(this), contact: c2.address(), helper: false })));
+        this.points.push(this.addChild(new WirePoint({ id: newAddress(this), contact: c1.address(), helper: false, x: 0, y: 0 })));
+        this.points.push(this.addChild(new WirePoint({ id: newAddress(this), contact: c2.address(), helper: false, x: 0, y: 0 })));
         this.line = new Konva.Line({
             points: [],
             stroke: 'blue',

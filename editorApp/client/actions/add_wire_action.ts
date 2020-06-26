@@ -73,8 +73,8 @@ export class AddContactWireAction implements Action {
         return {
             'typeMarker': 'AddContactWireAction',
             'spec': {
-                'contact_1': address(this.c1),
-                'contact_2': address(this.c2),
+                'contact_1': this.c1.address(),
+                'contact_2': this.c2?.address(),
                 'wire_id': this.wire?.id(),
             }
         }

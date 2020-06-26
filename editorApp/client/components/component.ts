@@ -30,8 +30,7 @@ export abstract class Component implements Addressable {
                 removeAddressRoot(this.id());
             }
             if ((this as any).selectableInterface) {
-                // TODO: make select() accept 'any'.
-                select((this as any as Selectable), false);
+                select(this, false);
             }
         }
         return this._materialized;

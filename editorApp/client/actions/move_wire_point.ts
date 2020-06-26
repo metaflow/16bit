@@ -1,9 +1,8 @@
 import { Action, actionDeserializers } from '../action';
 import Konva from 'konva';
-import { stage, closesetContact, toPhysical, getPhysicalCursorPosition, selectionAddresses, select } from '../stage';
+import { getPhysicalCursorPosition } from '../stage';
 import { ContactWire, WirePoint, WireSpec, WirePointSpec } from '../components/wire';
-import { Contact } from '../components/contact';
-import { address, getByAddress, getTypedByAddress } from '../address';
+import { getByAddress, getTypedByAddress } from '../address';
 import assertExists from 'ts-assert-exists';
 
 
@@ -15,24 +14,6 @@ actionDeserializers.push(function (data: any): Action | null {
   return z;
 });
 
-class WirePointState {
-  x: number;
-  y: number;
-  contact: Contact | null;
-  point: WirePoint;
-  constructor(p: WirePoint) {
-    this.point = p;
-    this.x = p.x();
-    this.y = p.y();
-    this.contact = p.contact();
-  }
-  restore() {
-    this.point.x(this.x);
-    this.point.y(this.y);
-    this.point.contact(this.contact);
-    this.point.updateLayout();
-  }
-}
 
 interface spec {
   points: string[];
@@ -50,7 +31,6 @@ export class MoveWirePointAction implements Action {
   wires: string[];
   from: [number, number];
   to: [number, number];
-  // points: WirePoint[];
   constructor(points: WirePoint[], origin?: [number, number]) {
     this.original = points.map(p => p.spec());
     this.wires = Array.from(new Set<string>(points.map(p => p.parent()?.address()!)))
@@ -80,8 +60,8 @@ export class MoveWirePointAction implements Action {
     const dy = this.to[1] - this.from[1];
     for (const s of this.original) {
       let p = assertExists(getTypedByAddress(WirePoint, s.address));
-      p.x(s.x! + dx); // TODO: make x, y obligatory in spec
-      p.y(s.y! + dy);
+      p.x(s.x + dx);
+      p.y(s.y + dy);
     }
   }
   apply(): void {

@@ -2,7 +2,7 @@ import { Addressable, newAddress } from "../address";
 import Konva from "konva";
 import { appActions } from "../action";
 import { AddContactWireAction } from "../actions/add_wire_action";
-import { scale, addContact } from "../stage";
+import { scale, addContact, removeContact } from "../stage";
 import { Component } from "./component";
 
 const radius = 0.8;
@@ -27,7 +27,7 @@ export class Contact extends Component {
             if (z)  {
                 addContact(this);
             } else {
-                // TODO: remove contact.
+                removeContact(this);
             }
         }        
         return z;
