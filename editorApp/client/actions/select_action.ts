@@ -24,12 +24,44 @@ interface Spec {
 
 export class SelectAction implements Action {
     actionType = "SelectAction";
-    rect: Konva.Rect;
+    rect: Konva.Rect|null = null;
     prevSelection: string[];
     newSelection: string[] = [];
     constructor() {
         this.prevSelection = selectionAddresses();
         
+       
+    }
+    apply(): void {
+        clearSelection();
+        this.newSelection.map(x => getByAddress(x)).forEach(x => select(x));
+    }
+    undo(): void {
+        clearSelection();
+        this.prevSelection.map(x => getByAddress(x)).forEach(x => select(x));
+    }
+    mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean {
+        if (this.rect == null) return false;
+        let pos = getCursorPosition();
+        this.rect.width(pos.x - this.rect.x());
+        this.rect.height(pos.y - this.rect.y());
+        let action = this;
+        const r = this.rect.getClientRect(null);
+        var shapes = stage()?.find('.selectable');
+        if (shapes == null) return true;
+        var selected = shapes.toArray().filter((shape) => {
+            return Konva.Util.haveIntersection(r, shape.getClientRect());
+        });
+        this.newSelection = [];
+        for (const s of selected) {            
+            const a = s.attrs['address'];
+            this.newSelection.push(a);
+            const x = getByAddress(a);
+        }
+        this.apply();        
+        return false;
+    }
+    mousedown(event: Konva.KonvaEventObject<MouseEvent>): boolean {
         let pos = getCursorPosition();
         this.rect = new Konva.Rect({
             x: pos.x,
@@ -37,40 +69,10 @@ export class SelectAction implements Action {
             fill: 'rgba(0,0,255,0.5)',
         });
         actionLayer()?.add(this.rect);
-    }
-    apply(): void {
-        clearSelection();
-        this.newSelection.map(x => getByAddress(x)).forEach(x => select(x as Selectable));
-    }
-    undo(): void {
-        clearSelection();
-        this.prevSelection.map(x => getByAddress(x)).forEach(x => select(x as any as Selectable));
-    }
-    mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean {
-        let pos = getCursorPosition();
-        this.rect.width(pos.x - this.rect.x());
-        this.rect.height(pos.y - this.rect.y());
-        let action = this;
-        var shapes = stage()?.find('.selectable');
-        if (shapes == null) return true;
-        var selected = shapes.toArray().filter((shape) => {
-            return Konva.Util.haveIntersection(action.rect.getClientRect(null), shape.getClientRect())
-        });
-        this.newSelection = [];
-        for (const s of selected) {            
-            const a = s.attrs['address'];
-            console.log('selected address', a);
-            this.newSelection.push(a);
-            const x = getByAddress(a);
-            console.log(a, x);
-        }
-        this.apply();        
-        return false;
-    }
-    mousedown(event: Konva.KonvaEventObject<MouseEvent>): boolean {
         return false;
     }
     mouseup(event: Konva.KonvaEventObject<MouseEvent>): boolean {
+        if (this.rect == null) return false;
         let pos = getCursorPosition();
         this.rect.width(pos.x - this.rect.x());
         this.rect.height(pos.y - this.rect.y());
@@ -79,7 +81,7 @@ export class SelectAction implements Action {
         return true;
     }
     cancel(): void {
-        this.rect.remove();
+        this.rect?.remove();
     }
     serialize(): any {
         let z: Spec = {

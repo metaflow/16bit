@@ -1,4 +1,5 @@
-- make selection an action
+- make selection an action on toolbar
+- add orthogonal wire action
 - schematic serealization
 - schematic
     - toolbar to add components
@@ -11,6 +12,7 @@
     - delete IC
     - move IC
     - schematic wire (intiallay copy)
+    - make wire with orthogonal bends
     - add schematic wire
     - select wire
     - delete wire
@@ -33,3 +35,5 @@ scenario:
 - moving part will auto-move wires
 - wires can be moved
 - mark connections that does not exist / missing on schematic
+
+

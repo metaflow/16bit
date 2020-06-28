@@ -6,6 +6,7 @@ import { newAddress } from './address';
 import { SelectAction } from './actions/select_action';
 import { ic74x245 } from './components/74x245';
 import { PlaceComponentAction } from './actions/add_ic_action';
+import { AddOrthogonalWireAction } from './actions/add_orthogonal_wire';
 
 (window as any).add245 = function () {
   console.log('add 245');
@@ -14,6 +15,14 @@ import { PlaceComponentAction } from './actions/add_ic_action';
 
 (window as any).clearActionsHistory = function () {
   localStorage.setItem('actions_history', JSON.stringify([]));
+};
+
+(window as any).addOrthogonal = function() {
+  appActions.current(new AddOrthogonalWireAction());
+};
+
+(window as any).toolSelect = function() {
+  appActions.current(new SelectAction());
 };
 
 
@@ -46,7 +55,6 @@ stage()?.on('mousedown', function (e) {
     actionLayer()?.batchDraw();
     return;
   }
-  appActions.current(new SelectAction());
 });
 
 stage()?.on('mouseup', function (e) {

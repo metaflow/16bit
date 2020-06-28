@@ -5,7 +5,7 @@ import {diffString} from 'json-diff';
 export const actionDeserializers: { (data: any): (Action | null) }[] = [];
 
 export interface Action {
-    actionType: string;
+    actionType: string; // TODO: is not used properly, individual serializers should not set action type.
     apply(): void;
     undo(): void;
     mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean;

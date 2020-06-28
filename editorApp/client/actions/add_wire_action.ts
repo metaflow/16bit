@@ -1,9 +1,9 @@
 import Konva from 'konva';
-import { ContactWire } from '../components/wire';
+import { ContactWire, WirePoint } from '../components/wire';
 import { Action, actionDeserializers } from '../action';
 import { closesetContact, toScreen, actionLayer, defaultLayer } from '../stage';
 import { Contact } from '../components/contact';
-import { address, getByAddress, removeAddressRoot, newAddress } from '../address';
+import { getByAddress, removeAddressRoot, newAddress } from '../address';
 
 export class AddContactWireAction implements Action {
     actionType = "AddContactWireAction";
@@ -31,6 +31,23 @@ export class AddContactWireAction implements Action {
         const a = newAddress();
         console.log('add wire', a);
         this.wire = new ContactWire(a, this.c1, this.c2!);
+        this.wire.points.push(this.wire.addChild(new WirePoint(
+            {
+                id: newAddress(this.wire),
+                contact: this.c1.address(),
+                helper: false,
+                x: 0,
+                y: 0
+            })));
+        this.wire.points.push(this.wire.addChild(new WirePoint(
+            {
+                id: newAddress(this.wire),
+                contact: this.c2!.address(),
+                helper: false,
+                x: 0,
+                y: 0
+            })));
+        this.wire.updateLayout();
         this.wire.materialized(true);
         this.wire.show(defaultLayer());
         this.line.remove();
@@ -54,7 +71,7 @@ export class AddContactWireAction implements Action {
     }
 
     complete(c2: Contact) {
-        this.c2 = c2;        
+        this.c2 = c2;
     }
 
     mousedown(event: Konva.KonvaEventObject<MouseEvent>): boolean {

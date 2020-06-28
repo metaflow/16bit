@@ -1,12 +1,11 @@
 import Konva from 'konva';
 import { Contact } from './contact';
 import { scale, toScreen, getPhysicalCursorPosition, selection } from '../stage';
-import { address, newAddress, getTypedByAddress } from '../address';
+import { newAddress, getTypedByAddress } from '../address';
 import { Selectable } from '../actions/select_action';
 import { Component } from './component';
 import { appActions } from '../action';
 import { MoveWirePointAction } from '../actions/move_wire_point';
-import assertExists from 'ts-assert-exists';
 
 export interface WirePointSpec {
     address?: string;
@@ -18,6 +17,25 @@ export interface WirePointSpec {
 }
 
 const wirePointSize = 3;
+
+/*
+wire bending
+
+points are:
+- bend / helper (in the middle of straight fragment) / attached to something. That can be
+modelled as "fixed" flag and "midpoint" (helper at the moment).
+- wire has an "orthogonal" flag meaning that all bends must be 90 degrees
+- editing of non-orthogonal wire is implemented and more or less straightforward as move of
+  every point is independent
+- moving points for orthogonal wire. First we move affected (selected) points and then look on
+  adjusted points that were not affected:
+  - bend -> middle: look through and if the next point is non-affected bend, then move this bend
+    horizontally/vertically depending on wire direction between; if it is a fixed point - move
+    middle point horizontally/vertically and consider it "affected";
+  - middle -> any: add two bend points in between.
+
+After moving all points in wire we should check wire self-intersections to remove "loops".
+*/
 
 export class WirePoint extends Component implements Selectable {
     selectableInterface: true = true;
@@ -108,10 +126,8 @@ export interface WireSpec {
 export class ContactWire extends Component {
     line: Konva.Line;
     points: WirePoint[] = [];
-    constructor(id: string, c1: Contact, c2: Contact) {
+    constructor(id: string) {
         super(id);
-        this.points.push(this.addChild(new WirePoint({ id: newAddress(this), contact: c1.address(), helper: false, x: 0, y: 0 })));
-        this.points.push(this.addChild(new WirePoint({ id: newAddress(this), contact: c2.address(), helper: false, x: 0, y: 0 })));
         this.line = new Konva.Line({
             points: [],
             stroke: 'blue',
@@ -120,11 +136,11 @@ export class ContactWire extends Component {
             lineJoin: 'round',
         });
         this.shapes.add(this.line);
-        this.updateIntermediatePoints();
         this.updateLayout();
     }
     updateLayout() {
         super.updateLayout();
+        this.updateIntermediatePoints();
         const pp: number[] = [];
         for (const p of this.points) {
             if (p._helper) continue;
@@ -147,6 +163,7 @@ export class ContactWire extends Component {
         // Iteracte over points and add to line.
         // If only two points: add intermediate one.
         // If 4+ points: remove all but one intermediate.
+        if (this.points.length < 2) return;
         const specs = this.points.map(p => p.spec());
         console.log('update intermediate points', specs);
         // this.points.forEach(p => p.remove());
@@ -216,7 +233,6 @@ export class ContactWire extends Component {
         if (s !== undefined) {
             o.points.forEach(p => p.remove());
             o.points = s.points.map(x => o.addChild(new WirePoint(x)));
-            o.updateIntermediatePoints();
             o.updateLayout();
         }
         return {

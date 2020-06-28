@@ -71,7 +71,6 @@ export class MoveWirePointAction implements Action {
       p._helper = false;
     }
     for (const w of this.wires) {
-      (getByAddress(w) as ContactWire).updateIntermediatePoints();
       (getByAddress(w) as ContactWire).updateLayout();
     }
     for (const w of this.wires) {

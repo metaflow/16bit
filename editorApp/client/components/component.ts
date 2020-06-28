@@ -60,7 +60,7 @@ export abstract class Component implements Addressable {
         c.materialized(this.materialized());
         return c;
     }
-    addressParent(): Addressable | null { // TODO: remove
+    addressParent(): Addressable | null {
         return this.parent();
     }
     addressChild(id: string): Addressable | null | undefined {
