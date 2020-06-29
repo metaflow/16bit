@@ -1,5 +1,5 @@
 import Konva from 'konva';
-import { ContactWire, WirePoint } from '../components/wire';
+import { Wire, WirePoint } from '../components/wire';
 import { Action, actionDeserializers } from '../action';
 import { closesetContact, toScreen, actionLayer, defaultLayer, getPhysicalCursorPosition } from '../stage';
 import { Contact } from '../components/contact';
@@ -7,7 +7,7 @@ import { getByAddress, removeAddressRoot, newAddress } from '../address';
 
 export class AddOrthogonalWireAction implements Action {
     actionType = "AddOrthogonalWireAction";
-    wire: ContactWire | null = null;
+    wire: Wire | null = null;
     line: Konva.Line;
     points: Konva.Vector2d[] = [];
 
@@ -26,8 +26,9 @@ export class AddOrthogonalWireAction implements Action {
     }
     apply() {
         const a = newAddress();
-        this.wire = new ContactWire(a);
+        this.wire = new Wire(a);
         const w = this.wire;
+        w.orthogonal(true);
         this.points.forEach(p => {
             w.points.push(w.addChild(new WirePoint(
                 {

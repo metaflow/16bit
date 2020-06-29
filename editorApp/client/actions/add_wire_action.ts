@@ -1,5 +1,5 @@
 import Konva from 'konva';
-import { ContactWire, WirePoint } from '../components/wire';
+import { Wire, WirePoint } from '../components/wire';
 import { Action, actionDeserializers } from '../action';
 import { closesetContact, toScreen, actionLayer, defaultLayer } from '../stage';
 import { Contact } from '../components/contact';
@@ -7,7 +7,7 @@ import { getByAddress, removeAddressRoot, newAddress } from '../address';
 
 export class AddContactWireAction implements Action {
     actionType = "AddContactWireAction";
-    wire: ContactWire | null = null;
+    wire: Wire | null = null;
     line: Konva.Line;
     c1: Contact;
     c2: Contact | null = null;
@@ -30,7 +30,7 @@ export class AddContactWireAction implements Action {
     apply() {
         const a = newAddress();
         console.log('add wire', a);
-        this.wire = new ContactWire(a, this.c1, this.c2!);
+        this.wire = new Wire(a);
         this.wire.points.push(this.wire.addChild(new WirePoint(
             {
                 id: newAddress(this.wire),

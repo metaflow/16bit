@@ -43,6 +43,7 @@ export class WirePoint extends Component implements Selectable {
     selectionRect: Konva.Rect;
     _selected: boolean = false;
     _helper: boolean;
+    fixed: boolean = false;
     constructor(spec: WirePointSpec) {
         super(spec.id);
         if (spec.contact != null) this._contact = getTypedByAddress(Contact, spec.contact);
@@ -101,8 +102,8 @@ export class WirePoint extends Component implements Selectable {
         }
         return this._contact;
     }
-    wire(): ContactWire {
-        return this.parent() as ContactWire;
+    wire(): Wire {
+        return this.parent() as Wire;
     }
     spec(): WirePointSpec {
         return {
@@ -123,9 +124,10 @@ export interface WireSpec {
     points: WirePointSpec[];
 }
 
-export class ContactWire extends Component {
+export class Wire extends Component {
     line: Konva.Line;
     points: WirePoint[] = [];
+    _orthogonal: boolean = false;
     constructor(id: string) {
         super(id);
         this.line = new Konva.Line({
@@ -164,40 +166,36 @@ export class ContactWire extends Component {
         // If only two points: add intermediate one.
         // If 4+ points: remove all but one intermediate.
         if (this.points.length < 2) return;
-        const specs = this.points.map(p => p.spec());
-        console.log('update intermediate points', specs);
+        // const specs = this.points.map(p => p.spec());
+        // console.log('update intermediate points', specs);
         // this.points.forEach(p => p.remove());
         // this.points = [];
-        let i = 0;
         let j = 1;
-        const keep = new Array<boolean>(specs.length);
+        const n = this.points.length;
+        const keep = new Array<boolean>(n);
         console.log('keep', keep);
         // this.points.push(new WirePoint(specs[0]));
         keep[0] = true;
-        while (j < specs.length) {
-            if (specs[j].helper) {
+        let pi = this.points[0];
+        while (j < n) {
+            let pj = this.points[j];
+            if (pj._helper && !pj.fixed) {
                 j++; continue;
             }
-            let xi = specs[i].x!;
-            let yi = specs[i].y!;
-            let xj = specs[j].x!;
-            let yj = specs[j].y!;
             let k = j + 1;
-            while (k < specs.length && specs[k].helper) k++;
-            if (k < specs.length) {
-                let xk = specs[k].x!;
-                let yk = specs[k].y!;
-                const a1 = Math.atan2(yj - yi, xj - xi);
-                const a2 = Math.atan2(yk - yi, xk - xi);
-                console.log(i, j, k, ' |', xi, yi, '|', xj, yj, '|', xk, yk, 'a1', a1, 'a2', a2, 'd', Math.abs(a1 - a2));
+            while (k < n && this.points[k]._helper && !this.points[k].fixed) k++;
+            if (k < n) {
+                const pk = this.points[k];
+                const a1 = Math.atan2(pj.y() - pi.y(), pj.x() - pi.x());
+                const a2 = Math.atan2(pk.y() - pi.y(), pk.x() - pi.x());
                 if (Math.abs(a1 - a2) < 0.1) {
                     j = k;
                     continue;
                 }
             }
             keep[j] = true;
-            i = j;
-            j = k;
+            pi = pj;
+            j++;
         }
         const pp = this.points;
         const keepPoints: WirePoint[] = [];
@@ -207,6 +205,13 @@ export class ContactWire extends Component {
                 keepPoints.push(pp[k]);
             } else {
                 pp[k].remove();
+            }
+        }
+        if (this._orthogonal) {
+            const left_x: boolean[] = [];
+            const right_x: boolean[] = [];
+            for (let k = 0; k < keepPoints.length; k++) {
+
             }
         }
         for (let k = 0; k < keepPoints.length; k++) {
@@ -239,5 +244,9 @@ export class ContactWire extends Component {
             id: o.id(),
             points: o.points.map(p => p.spec()),
         };
+    }
+    orthogonal(v?: boolean): boolean {
+        if (v !== undefined) this._orthogonal = v;
+        return this._orthogonal;
     }
 }

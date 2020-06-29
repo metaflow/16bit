@@ -1,7 +1,7 @@
 import { Action, actionDeserializers } from '../action';
 import Konva from 'konva';
 import { getPhysicalCursorPosition } from '../stage';
-import { ContactWire, WirePoint, WireSpec, WirePointSpec } from '../components/wire';
+import { Wire, WirePoint, WireSpec, WirePointSpec } from '../components/wire';
 import { getByAddress, getTypedByAddress } from '../address';
 import assertExists from 'ts-assert-exists';
 
@@ -35,7 +35,7 @@ export class MoveWirePointAction implements Action {
     this.original = points.map(p => p.spec());
     this.wires = Array.from(new Set<string>(points.map(p => p.parent()?.address()!)))
     for (const w of this.wires) {
-      this.oldWireStates.set(w, (getByAddress(w) as ContactWire).spec());
+      this.oldWireStates.set(w, (getByAddress(w) as Wire).spec());
     }
     if (origin === undefined) origin = getPhysicalCursorPosition();
     this.from = origin;
@@ -69,17 +69,18 @@ export class MoveWirePointAction implements Action {
     for (const s of this.original) {
       let p = assertExists(getTypedByAddress(WirePoint, s.address));
       p._helper = false;
+      p.fixed = true;
     }
     for (const w of this.wires) {
-      (getByAddress(w) as ContactWire).updateLayout();
+      (getByAddress(w) as Wire).updateLayout();
     }
     for (const w of this.wires) {
-      this.newWireStates.set(w, (getByAddress(w) as ContactWire).spec());
+      this.newWireStates.set(w, (getByAddress(w) as Wire).spec());
     }
   }
   undo(): void {
     this.oldWireStates.forEach((v, k) => {
-      let w = (getByAddress(k) as ContactWire);
+      let w = (getByAddress(k) as Wire);
       w.spec(v);
     });
   }
@@ -87,7 +88,7 @@ export class MoveWirePointAction implements Action {
     this.to = getPhysicalCursorPosition();
     this.updatePositions();
     for (const w of this.wires) {
-      (getByAddress(w) as ContactWire).updateLayout();
+      (getByAddress(w) as Wire).updateLayout();
     }
     return false;
   }
