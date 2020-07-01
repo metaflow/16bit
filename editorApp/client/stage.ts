@@ -1,7 +1,7 @@
 import Konva from 'konva';
 import { Breadboard } from './components/breadboard';
 import { Contact } from './components/contact';
-import { address, Addressable, roots } from './address';
+import { address, Addressable, roots, getByAddress } from './address';
 import { Selectable } from './actions/select_action';
 import { Component } from './components/component';
 
@@ -102,7 +102,11 @@ export function selection(): Selectable[] {
     return _selection;
 }
 
-export function selectionAddresses(): string[] {
+export function selectionAddresses(s?: string[]): string[] {
+    if (s !== undefined) {
+        clearSelection();
+        s.forEach(a => select(getByAddress(a)));
+    }
     return _selection
     .filter(a => (a instanceof Component))
     .map(a => address((a as any) as Addressable))

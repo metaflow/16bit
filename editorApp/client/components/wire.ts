@@ -8,7 +8,7 @@ import { appActions } from '../action';
 import { MoveWirePointAction } from '../actions/move_wire_point';
 
 export interface WirePointSpec {
-    address?: string;
+    address?: string; // TODO: why?
     id: string;
     x: number;
     y: number;

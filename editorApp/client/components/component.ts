@@ -17,7 +17,6 @@ export abstract class Component implements Addressable {
     _materialized = false; // If this component really "exists" and accessabe from the address root.
     constructor(id: string) {
         this._id = id;
-
     }
     materialized(b?: boolean): boolean {
         if (b === undefined) return this._materialized;
@@ -95,6 +94,7 @@ export abstract class Component implements Addressable {
     }
     hide() {
         this.shapes.remove();
+        this.children.forEach(c => c.hide());
     }
     remove() {
         this.hide();
