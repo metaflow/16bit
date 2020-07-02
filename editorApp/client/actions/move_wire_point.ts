@@ -1,7 +1,7 @@
 import { Action, actionDeserializers } from '../action';
 import Konva from 'konva';
 import { getPhysicalCursorPosition, actionLayer, defaultLayer, selectionAddresses } from '../stage';
-import { Wire, WirePoint, WireSpec, WirePointSpec } from '../components/wire';
+import { Wire, WirePoint, WireSpec, WirePointSpec, removeRedundantPoints, addHelperPoints } from '../components/wire';
 import { getByAddress, getTypedByAddress, newAddress } from '../address';
 import assertExists from 'ts-assert-exists';
 
@@ -36,23 +36,64 @@ function moveSingleWire(dx: number, dy : number, s: SingleWireMove): WireSpec {
   const z: WireSpec = {
     id: "",
     points: [],
+    orthogonal: s.originalSpec.orthogonal,
   };
   w.points.forEach(p => p.remove());
+  const affected: boolean[] = [];
+  const nextVertical: boolean[] = [];
   for (const p of s.originalSpec.points) {
-    const affected = s.affectedPointsIds.indexOf(p.id) != -1;
-    if (p.helper && !affected) continue;
-    let n: WirePointSpec = {
-      helper: false,
+    const a = s.affectedPointsIds.indexOf(assertExists(p.id)) != -1;
+    if (p.helper && !a) continue;
+    affected.push(a);
+    z.points.push({
+      helper: p.helper,
       x: p.x,
       y: p.y,
       id: p.id,
-    };
-    if (affected) {
-      n.x += dx;
-      n.y += dy;
-    }
-    z.points.push(n);
+    });
   }
+  for (let i = 0; i < z.points.length; i++) {
+      if (i + 1 < z.points.length) {
+        nextVertical.push(z.points[i].x == z.points[i+1].x);
+      }
+      if (affected[i]) {
+        z.points[i].x += dx;
+        z.points[i].y += dy;
+      }
+  }
+  if (z.orthogonal) {
+    for (let i = 0; i < z.points.length; i++) {
+      const p = z.points[i];
+      if (!affected[i]) continue;
+      if (i > 0 && !affected[i-1]) {
+        if (p.helper) {
+          console.error('helper points move is not implemented');
+        } else {
+          if (nextVertical[i-1]) {
+            z.points[i-1].x = p.x;
+          } else {
+            z.points[i-1].y = p.y;
+          }
+        }
+      }
+      if (i + 1 < z.points.length) {
+        if (p.helper) {
+          console.error('helper points move is not implemented');
+        } else {
+          if (nextVertical[i]) {
+            z.points[i+1].x = p.x;
+          } else {
+            z.points[i+1].y = p.y;
+          }
+        }
+      }
+    }
+  }
+  for (const p of z.points) {
+    p.helper = false;
+  }
+  removeRedundantPoints(z);
+  addHelperPoints(z);
   return z;
 }
 
@@ -108,7 +149,8 @@ export class MoveWirePointAction implements Action {
     const dy = this.to[1] - this.from[1];
     for (const s of this.states) {
       const w = getByAddress(s.address) as Wire;
-      w.spec(moveSingleWire(dx, dy, s));
+      let x = moveSingleWire(dx, dy, s);
+      w.spec(x);
       w.show(defaultLayer());
       s.auxWire?.hide();
     }

@@ -1,5 +1,5 @@
 import Konva from 'konva';
-import { Wire, WirePoint } from '../components/wire';
+import { Wire, WirePoint, removeRedundantPoints, addHelperPoints } from '../components/wire';
 import { Action, actionDeserializers } from '../action';
 import { closesetContact, toScreen, actionLayer, defaultLayer, getPhysicalCursorPosition } from '../stage';
 import { Contact } from '../components/contact';
@@ -29,15 +29,15 @@ export class AddOrthogonalWireAction implements Action {
         this.wire = new Wire(a);
         const w = this.wire;
         w.orthogonal(true);
-        this.points.forEach(p => {
-            w.points.push(w.addChild(new WirePoint(
-                {
-                    id: newAddress(w),
-                    helper: false,
-                    x: p.x,
-                    y: p.y,
-                })));
-        });
+        const s = w.spec();
+        s.points = this.points.map(p => ({
+            helper: false,
+            x: p.x,
+            y: p.y,
+        }));
+        removeRedundantPoints(s);
+        addHelperPoints(s);
+        this.wire.spec(s);
         this.wire.updateLayout();
         this.wire.materialized(true);
         this.wire.show(defaultLayer());

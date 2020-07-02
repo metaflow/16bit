@@ -6,10 +6,11 @@ import { Selectable } from '../actions/select_action';
 import { Component } from './component';
 import { appActions } from '../action';
 import { MoveWirePointAction } from '../actions/move_wire_point';
+import assertExists from 'ts-assert-exists';
 
 export interface WirePointSpec {
-    address?: string; // TODO: why?
-    id: string;
+    address?: string; // TODO: why we need an address?
+    id?: string;
     x: number;
     y: number;
     contact?: string | null;
@@ -42,14 +43,13 @@ export class WirePoint extends Component implements Selectable {
     _contact: Contact | null = null;
     selectionRect: Konva.Rect;
     _selected: boolean = false;
-    _helper: boolean;
-    fixed: boolean = false;
+    helper: boolean;
     constructor(spec: WirePointSpec) {
-        super(spec.id);
+        super(assertExists(spec.id));
         if (spec.contact != null) this._contact = getTypedByAddress(Contact, spec.contact);
         if (spec.x !== undefined) this.x(spec.x);
         if (spec.y !== undefined) this.y(spec.y);
-        this._helper = spec.helper;
+        this.helper = spec.helper;
         this.selectionRect = new Konva.Rect({
             dash: [1, 1],
             name: 'selectable',
@@ -64,12 +64,12 @@ export class WirePoint extends Component implements Selectable {
             } else {
                 appActions.current(new MoveWirePointAction([point], getPhysicalCursorPosition()));
             }
-        });       
+        });
         this.shapes.add(this.selectionRect);
         this.updateLayout();
     }
-    materialized(b?: boolean): boolean {        
-        let z = super.materialized(b);  
+    materialized(b?: boolean): boolean {
+        let z = super.materialized(b);
         if (z) {
             this.selectionRect.attrs['address'] = this.address(); // TODO: make address() check that this component is accessible from the root.
         }
@@ -86,7 +86,7 @@ export class WirePoint extends Component implements Selectable {
         this.selectionRect.y(xy[1]);
         this.selectionRect.width(wirePointSize * scale());
         this.selectionRect.height(wirePointSize * scale());
-        this.selectionRect.stroke(this._selected ? 'red' : (this._helper ? 'green' : 'black'));
+        this.selectionRect.stroke(this._selected ? 'red' : (this.helper ? 'green' : 'black'));
     }
     selected(v?: boolean): boolean {
         if (v !== undefined) {
@@ -112,7 +112,7 @@ export class WirePoint extends Component implements Selectable {
             x: this.x(),
             y: this.y(),
             contact: this.contact()?.address(),
-            helper: this._helper,
+            helper: this.helper,
         }
     }
 }
@@ -122,6 +122,7 @@ const wireWidth = 0.5;
 export interface WireSpec {
     id: string;
     points: WirePointSpec[];
+    orthogonal: boolean;
 }
 
 export class Wire extends Component {
@@ -142,10 +143,9 @@ export class Wire extends Component {
     }
     updateLayout() {
         super.updateLayout();
-        this.updateIntermediatePoints();
         const pp: number[] = [];
         for (const p of this.points) {
-            if (p._helper) continue;
+            if (p.helper) continue;
             const [x, y] = toScreen(p.x(), p.y());
             pp.push(x, y);
         }
@@ -160,73 +160,6 @@ export class Wire extends Component {
         }
         return this.points[i];
     }
-    updateIntermediatePoints() {
-        // Make sure that on every line there are 3 points.
-        // Iteracte over points and add to line.
-        // If only two points: add intermediate one.
-        // If 4+ points: remove all but one intermediate.
-        if (this.points.length < 2) return;
-        // const specs = this.points.map(p => p.spec());
-        // console.log('update intermediate points', specs);
-        // this.points.forEach(p => p.remove());
-        // this.points = [];
-        let j = 1;
-        const n = this.points.length;
-        const keep = new Array<boolean>(n);
-        console.log('keep', keep);
-        // this.points.push(new WirePoint(specs[0]));
-        keep[0] = true;
-        let pi = this.points[0];
-        while (j < n) {
-            let pj = this.points[j];
-            if (pj._helper && !pj.fixed) {
-                j++; continue;
-            }
-            let k = j + 1;
-            while (k < n && this.points[k]._helper && !this.points[k].fixed) k++;
-            if (k < n) {
-                const pk = this.points[k];
-                const a1 = Math.atan2(pj.y() - pi.y(), pj.x() - pi.x());
-                const a2 = Math.atan2(pk.y() - pi.y(), pk.x() - pi.x());
-                if (Math.abs(a1 - a2) < 0.1) {
-                    j = k;
-                    continue;
-                }
-            }
-            keep[j] = true;
-            pi = pj;
-            j++;
-        }
-        const pp = this.points;
-        const keepPoints: WirePoint[] = [];
-        this.points = [];
-        for (let k = 0; k < keep.length; k++) {
-            if (keep[k]) {
-                keepPoints.push(pp[k]);
-            } else {
-                pp[k].remove();
-            }
-        }
-        if (this._orthogonal) {
-            const left_x: boolean[] = [];
-            const right_x: boolean[] = [];
-            for (let k = 0; k < keepPoints.length; k++) {
-
-            }
-        }
-        for (let k = 0; k < keepPoints.length; k++) {
-            if (k > 0) {
-                this.points.push(this.addChild(new WirePoint({
-                    id: newAddress(this),
-                    x: (keepPoints[k - 1].x() + keepPoints[k].x()) / 2,
-                    y: (keepPoints[k - 1].y() + keepPoints[k].y()) / 2,
-                    helper: true,
-                })));
-            }
-            this.points.push(keepPoints[k]);
-        }
-        console.log('updated points intermediate points', this.points.map(p => p.spec()));
-    }
     serialize(): any {
         return {
             'typeMarker': 'ContactWire',
@@ -237,16 +170,76 @@ export class Wire extends Component {
         let o = this;
         if (s !== undefined) {
             o.points.forEach(p => p.remove());
-            o.points = s.points.map(x => o.addChild(new WirePoint(x)));
+            o.points = s.points.map(x => {
+                if (x.id == undefined) x.id = newAddress(o);
+                return o.addChild(new WirePoint(x));
+            });
             o.updateLayout();
         }
         return {
             id: o.id(),
             points: o.points.map(p => p.spec()),
+            orthogonal: this.orthogonal(),
         };
     }
     orthogonal(v?: boolean): boolean {
         if (v !== undefined) this._orthogonal = v;
         return this._orthogonal;
     }
+}
+
+export function removeRedundantPoints(s: WireSpec) {
+    // Make sure that on every line there are 3 points.
+    // Iteracte over points and add to line.
+    // If only two points: add intermediate one.
+    // If 4+ points: remove all but one intermediate.
+    if (s.points.length < 2) return;
+    // const specs = this.points.map(p => p.spec());
+    // console.log('update intermediate points', specs);
+    // this.points.forEach(p => p.remove());
+    // this.points = [];
+    let j = 1;
+    const n = s.points.length;
+    const keep = new Array<boolean>(n);
+    // this.points.push(new WirePoint(specs[0]));
+    keep[0] = true;
+    let pi = s.points[0];
+    while (j < n) {
+        let pj = s.points[j];
+        let k = j + 1;
+        if (k < n) {
+            const pk = s.points[k];
+            const a1 = Math.atan2(pj.y - pi.y, pj.x - pi.x);
+            const a2 = Math.atan2(pk.y - pi.y, pk.x - pi.x);
+            if (Math.abs(a1 - a2) < 0.1) {
+                j = k;
+                continue;
+            }
+        }
+        keep[j] = true;
+        pi = pj;
+        j++;
+    }
+    const pp = s.points;
+    s.points = [];
+    for (let k = 0; k < keep.length; k++) {
+        if (keep[k]) {
+            s.points.push(pp[k]);
+        }
+    }
+}
+
+export function addHelperPoints(s: WireSpec) {
+    const pp: WirePointSpec[] = [];
+    for (let k = 0; k < s.points.length; k++) {
+        if (k > 0) {
+            pp.push({
+                x: (s.points[k - 1].x + s.points[k].x) / 2,
+                y: (s.points[k - 1].y + s.points[k].y) / 2,
+                helper: true,
+            });
+        }
+        pp.push(s.points[k]);
+    }
+    s.points = pp;
 }
