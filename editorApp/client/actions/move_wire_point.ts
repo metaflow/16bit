@@ -31,7 +31,7 @@ interface SingleWireMove {
   auxWire?: Wire;
 };
 
-function moveSingleWire(dx: number, dy : number, s: SingleWireMove): WireSpec {
+function moveSingleWire(dx: number, dy: number, s: SingleWireMove): WireSpec {
   const w = assertExists(s.auxWire);
   const z: WireSpec = {
     id: "",
@@ -41,6 +41,7 @@ function moveSingleWire(dx: number, dy : number, s: SingleWireMove): WireSpec {
   w.points.forEach(p => p.remove());
   const affected: boolean[] = [];
   const nextVertical: boolean[] = [];
+  const nextHorizontal: boolean[] = [];
   for (const p of s.originalSpec.points) {
     const a = s.affectedPointsIds.indexOf(assertExists(p.id)) != -1;
     if (p.helper && !a) continue;
@@ -53,38 +54,33 @@ function moveSingleWire(dx: number, dy : number, s: SingleWireMove): WireSpec {
     });
   }
   for (let i = 0; i < z.points.length; i++) {
-      if (i + 1 < z.points.length) {
-        nextVertical.push(z.points[i].x == z.points[i+1].x);
-      }
-      if (affected[i]) {
-        z.points[i].x += dx;
-        z.points[i].y += dy;
-      }
+    if (i + 1 < z.points.length) {
+      nextVertical.push(z.points[i].x == z.points[i + 1].x);
+      nextHorizontal.push(z.points[i].y == z.points[i + 1].y);
+    }
+    if (affected[i]) {
+      z.points[i].x += dx;
+      z.points[i].y += dy;
+    }
   }
   if (z.orthogonal) {
     for (let i = 0; i < z.points.length; i++) {
       const p = z.points[i];
-      if (!affected[i]) continue;
-      if (i > 0 && !affected[i-1]) {
-        if (p.helper) {
-          console.error('helper points move is not implemented');
-        } else {
-          if (nextVertical[i-1]) {
-            z.points[i-1].x = p.x;
-          } else {
-            z.points[i-1].y = p.y;
-          }
+      if (!affected[i] || p.helper) continue;
+      if (i > 0 && !affected[i - 1]) {
+        if (nextVertical[i - 1]) {
+          z.points[i - 1].x = p.x;
+        }
+        if (nextHorizontal[i - 1]) {
+          z.points[i - 1].y = p.y;
         }
       }
       if (i + 1 < z.points.length) {
-        if (p.helper) {
-          console.error('helper points move is not implemented');
-        } else {
-          if (nextVertical[i]) {
-            z.points[i+1].x = p.x;
-          } else {
-            z.points[i+1].y = p.y;
-          }
+        if (nextVertical[i]) {
+          z.points[i + 1].x = p.x;
+        } 
+        if (nextHorizontal[i]) {
+          z.points[i + 1].y = p.y;
         }
       }
     }
@@ -166,7 +162,9 @@ export class MoveWirePointAction implements Action {
     const dx = this.to[0] - this.from[0];  // TODO: make vector2d
     const dy = this.to[1] - this.from[1];
     for (const s of this.states) {
-      s.auxWire?.spec(moveSingleWire(dx, dy, s));
+      const sp = moveSingleWire(dx, dy, s);
+      console.log('aux spec', sp);
+      s.auxWire?.spec(sp);
     }
     return false;
   }

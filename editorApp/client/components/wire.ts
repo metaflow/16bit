@@ -170,9 +170,20 @@ export class Wire extends Component {
         let o = this;
         if (s !== undefined) {
             o.points.forEach(p => p.remove());
-            o.points = s.points.map(x => {
-                if (x.id == undefined) x.id = newAddress(o);
+            // Create points in two passes: first with known IDs, then new ones.
+            let pp = s.points.map(x => {
+                if (x.id == undefined) return null;
                 return o.addChild(new WirePoint(x));
+            });
+            for (let i = 0; i < s.points.length; i++) {
+                const x = s.points[i];
+                if (x.id !== undefined) continue;
+                x.id = newAddress(o);
+                pp[i] = o.addChild(new WirePoint(x));
+            }
+            o.points = [];
+            pp.forEach(x => {
+                if (x != null) o.points.push(x);
             });
             o.updateLayout();
         }

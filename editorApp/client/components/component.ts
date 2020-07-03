@@ -15,6 +15,7 @@ export abstract class Component implements Addressable {
     _mainColor = 'black';
     typeMarker: string = 'Component';
     _materialized = false; // If this component really "exists" and accessabe from the address root.
+    // TODO: should serialize some of that^. add "onDeserialized()" so children can call parent with it's part of deserializetion.
     constructor(id: string) {
         this._id = id;
     }
