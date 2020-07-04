@@ -1,8 +1,7 @@
 import { Action, actionDeserializers } from "../action";
 import { KonvaEventObject } from "konva/types/Node";
 import { Component, deserializeComponent } from "../components/component";
-import { getPhysicalCursorPosition, actionLayer, defaultLayer } from "../stage";
-import { removeAddressRoot } from "../address";
+import { getPhysicalCursorPosition, actionLayer, defaultLayer, pointAsNumber, gridAlignment } from "../stage";
 
 actionDeserializers.push(function(data: any): Action|null {
     if (data['typeMarker'] !== 'PlaceComponentAction') return null;
@@ -38,7 +37,7 @@ export class PlaceComponentAction implements Action {
         this.component.hide();
     }
     mousemove(event: KonvaEventObject<MouseEvent>): boolean {        
-        [this.x, this.y] = getPhysicalCursorPosition();
+        [this.x, this.y] = pointAsNumber(getPhysicalCursorPosition(gridAlignment()));
         this.component.x(this.x);
         this.component.y(this.y);
         this.component.updateLayout();

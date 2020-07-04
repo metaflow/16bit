@@ -1,6 +1,6 @@
 import { Component } from "./component";
 import Konva from "konva";
-import { toScreen, scale } from "../stage";
+import { toScreen, scale, pointAsNumber } from "../stage";
 import { newAddress } from "../address";
 import { Contact } from "./contact";
 
@@ -53,7 +53,7 @@ export class IntegratedCircuit extends Component {
 
     updateLayout() {
         super.updateLayout();
-        let [x, y] = toScreen(this.x(), this.y());
+        let [x, y] = pointAsNumber(toScreen(this.xy()));
         const w = Math.floor((this.pins.length + 1) / 2);
         this.rect.x(x);
         this.rect.y(y);

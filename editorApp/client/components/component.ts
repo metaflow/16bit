@@ -1,7 +1,7 @@
 import { Addressable, address, addAddressRoot, removeAddressRoot } from "../address";
 import Konva from "konva";
 import { Selectable } from "../actions/select_action";
-import { stage, select } from "../stage";
+import { stage, select, Point, point } from "../stage";
 
 export const componentDeserializers: { (data: any): (Component | null) }[] = [];
 
@@ -88,6 +88,9 @@ export abstract class Component implements Addressable {
         }
         if (this._parent != null) return this._parent.y() + this._y;
         return this._y;
+    }
+    xy(): Point {
+        return point(this._x, this._y);
     }
     show(layer: Konva.Layer | null) {
         this.shapes.moveTo(layer);

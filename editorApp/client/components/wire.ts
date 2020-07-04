@@ -1,6 +1,6 @@
 import Konva from 'konva';
 import { Contact } from './contact';
-import { scale, toScreen, getPhysicalCursorPosition, selection } from '../stage';
+import { scale, toScreen, getPhysicalCursorPosition, selection, pointAsNumber, point } from '../stage';
 import { newAddress, getTypedByAddress } from '../address';
 import { Selectable } from '../actions/select_action';
 import { Component } from './component';
@@ -59,10 +59,11 @@ export class WirePoint extends Component implements Selectable {
             console.log('click on wire point');
             e.cancelBubble = true;
             if (point.selected()) {
+                // TODO: make selection filter by type.
                 const points: WirePoint[] = selection().filter(x => x instanceof WirePoint).map(x => x as any as WirePoint);
-                appActions.current(new MoveWirePointAction(points, getPhysicalCursorPosition()));
+                appActions.current(new MoveWirePointAction(points, getPhysicalCursorPosition(null)));
             } else {
-                appActions.current(new MoveWirePointAction([point], getPhysicalCursorPosition()));
+                appActions.current(new MoveWirePointAction([point], getPhysicalCursorPosition(null)));
             }
         });
         this.shapes.add(this.selectionRect);
@@ -81,9 +82,9 @@ export class WirePoint extends Component implements Selectable {
             this.x(this._contact.x());
             this.y(this._contact.y());
         }
-        let xy = toScreen(this.x() - wirePointSize / 2, this.y() - wirePointSize / 2);
-        this.selectionRect.x(xy[0]);
-        this.selectionRect.y(xy[1]);
+        let xy = toScreen(point(this.x() - wirePointSize / 2, this.y() - wirePointSize / 2));
+        this.selectionRect.x(xy.x);
+        this.selectionRect.y(xy.y);
         this.selectionRect.width(wirePointSize * scale());
         this.selectionRect.height(wirePointSize * scale());
         this.selectionRect.stroke(this._selected ? 'red' : (this.helper ? 'green' : 'black'));
@@ -122,13 +123,11 @@ const wireWidth = 0.5;
 export interface WireSpec {
     id: string;
     points: WirePointSpec[];
-    orthogonal: boolean;
 }
 
 export class Wire extends Component {
     line: Konva.Line;
     points: WirePoint[] = [];
-    _orthogonal: boolean = false;
     constructor(id: string) {
         super(id);
         this.line = new Konva.Line({
@@ -146,8 +145,7 @@ export class Wire extends Component {
         const pp: number[] = [];
         for (const p of this.points) {
             if (p.helper) continue;
-            const [x, y] = toScreen(p.x(), p.y());
-            pp.push(x, y);
+            pp.push(...pointAsNumber(toScreen(p.xy())));
         }
         this.line.points(pp);
         this.line.strokeWidth(wireWidth * scale());
@@ -190,12 +188,7 @@ export class Wire extends Component {
         return {
             id: o.id(),
             points: o.points.map(p => p.spec()),
-            orthogonal: this.orthogonal(),
         };
-    }
-    orthogonal(v?: boolean): boolean {
-        if (v !== undefined) this._orthogonal = v;
-        return this._orthogonal;
     }
 }
 

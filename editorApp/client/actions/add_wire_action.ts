@@ -1,7 +1,7 @@
 import Konva from 'konva';
 import { Wire, WirePoint } from '../components/wire';
 import { Action, actionDeserializers } from '../action';
-import { closesetContact, toScreen, actionLayer, defaultLayer } from '../stage';
+import { closesetContact, toScreen, actionLayer, defaultLayer, pointAsNumber } from '../stage';
 import { Contact } from '../components/contact';
 import { getByAddress, removeAddressRoot, newAddress } from '../address';
 
@@ -14,9 +14,9 @@ export class AddContactWireAction implements Action {
 
     constructor(contact: Contact) {
         this.c1 = contact;
-        const xy = toScreen(contact.x(), contact.y());
+        const xy = pointAsNumber(toScreen(contact.xy()));
         this.line = new Konva.Line({
-            points: [xy[0], xy[1], xy[0], xy[1]],
+            points: [...xy, ...xy],
             stroke: 'red',
             strokeWidth: 3,
             lineCap: 'round',
@@ -62,10 +62,10 @@ export class AddContactWireAction implements Action {
     mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean {
         let c2 = closesetContact();
         if (c2 == null) return false;
-        const xy = toScreen(c2.x(), c2.y());
+        const xy = toScreen(c2.xy());
         const pp = this.line.points();
-        pp[2] = xy[0];
-        pp[3] = xy[1];
+        pp[2] = xy.x;
+        pp[3] = xy.y;
         this.line.points(pp);
         return false;
     }

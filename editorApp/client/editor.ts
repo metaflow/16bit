@@ -1,7 +1,7 @@
 import Konva from 'konva';
 import hotkeys from 'hotkeys-js';
 import { appActions } from './action';
-import { stage, defaultLayer, actionLayer } from './stage';
+import { stage, defaultLayer, actionLayer, gridAlignment } from './stage';
 import { newAddress } from './address';
 import { SelectAction } from './actions/select_action';
 import { ic74x245 } from './components/74x245';
@@ -86,6 +86,7 @@ hotkeys('ctrl+shift+z', function (e) {
   actionLayer()?.batchDraw();
 });
 
+gridAlignment(5); // TODO: make grid algnment change an action.
 appActions.load();
 defaultLayer()?.batchDraw();
 actionLayer()?.batchDraw();

@@ -1,6 +1,6 @@
 import { Component, componentDeserializers } from "./component";
 import Konva from "konva";
-import { toScreen, scale } from "../stage";
+import { toScreen, scale, pointAsNumber } from "../stage";
 import { Contact } from "./contact";
 
 componentDeserializers.push(function (data: any): (IntegratedCircuitSchematic | null) {
@@ -76,7 +76,7 @@ export class IntegratedCircuitSchematic extends Component {
 
     updateLayout() {
         super.updateLayout();
-        let [x, y] = toScreen(this.x(), this.y());
+        let [x, y] = pointAsNumber(toScreen(this.xy()));
         this.rect.x(x);
         this.rect.y(y);
         this.rect.height((Math.max(this.left_pins.length, this.right_pins.length) * contact_height + gap * 2) * scale());

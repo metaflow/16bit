@@ -6,12 +6,12 @@ import { Selectable } from './actions/select_action';
 import { Component } from './components/component';
 
 let _stage: Konva.Stage | null = null;
+let _gridAlignment: number | null = null;
+export type Point = Konva.Vector2d;
 
-function alignToGrid(x: number, y: number) {
-    const g = 20;
-    x = Math.round(x / g) * g;
-    y = Math.round(y / g) * g;
-    return [x, y];
+export function gridAlignment(v?: number | null): number | null {
+    if (v !== undefined) _gridAlignment = v;
+    return _gridAlignment;
 }
 
 export function stage(s?: Konva.Stage): Konva.Stage | null {
@@ -19,27 +19,46 @@ export function stage(s?: Konva.Stage): Konva.Stage | null {
     return _stage;
 }
 
-export function getCursorPosition(): Konva.Vector2d {
+export function getCursorPosition(): Point {
     let pos = stage()?.getPointerPosition();
-    if (pos == null) pos = {x: 0, y: 0};
+    if (pos == null) pos = { x: 0, y: 0 };
     return pos;
 }
 
-export function getPhysicalCursorPosition(): [number, number] {
+export function getPhysicalCursorPosition(align: number|null): Point {
     const xy = getCursorPosition();
-    return toPhysical(xy.x, xy.y);
+    return toPhysical(xy, align);
 }
 
 export function scale(): number {
     return 4;
 }
 
-export function toScreen(x: number, y: number): [number, number] {
-    return [x * scale(), y * scale()]
+export function toScreen(xy: Point): Point {
+    return point(xy.x * scale(), xy.y * scale());
 }
 
-export function toPhysical(x: number, y: number): [number, number] {
-    return [x / scale(), y / scale()];
+export function toPhysical(xy: Point, align: number|null): Point {
+    let x = xy.x / scale();
+    let y = xy.y / scale();    
+    return point(x, y);
+}
+
+export function alignPoint(xy: Point, a: number|null): Point {
+    if (a == null) return xy;
+    return point( Math.round(xy.x / a) * a, Math.round(xy.y / a) * a);
+}
+
+export function point(x: number, y: number): Point {
+    return { x, y };
+}
+
+export function pointAsNumber(xy: Point): [number, number] {
+    return [xy.x, xy.y];
+}
+
+export function pointSub(a: Point, b: Point): Point {
+    return point(a.x - b.x, a.y - b.y);
 }
 
 const contacts = new Map<string, Contact>();
@@ -57,15 +76,15 @@ export function distance(c: [number, number, number, number]): number {
     return Math.sqrt(dx * dx + dy * dy);
 }
 
-export function closesetContact(xy?: [number, number]): Contact | null {
+export function closesetContact(xy?: Point): Contact | null {
     if (xy === undefined) {
         const pos = getCursorPosition();
-        xy = toPhysical(pos.x, pos.y);        
+        xy = toPhysical(pos, null);
     }
     let z: Contact | null = null;
     let dz = 0;
     contacts.forEach(c => {
-        const d = distance([c!.x(), c!.y(), xy![0], xy![1]]);
+        const d = distance([c!.x(), c!.y(), xy!.x, xy!.y]);
         if (z == null || d < dz) {
             z = c;
             dz = d;
@@ -74,8 +93,8 @@ export function closesetContact(xy?: [number, number]): Contact | null {
     return z;
 }
 
-let _defaultLayer: Konva.Layer|null;
-export function defaultLayer(layer?: Konva.Layer): Konva.Layer|null {
+let _defaultLayer: Konva.Layer | null;
+export function defaultLayer(layer?: Konva.Layer): Konva.Layer | null {
     if (layer !== undefined) {
         _defaultLayer = layer;
         layer.setAttr('name', 'default');
@@ -83,8 +102,8 @@ export function defaultLayer(layer?: Konva.Layer): Konva.Layer|null {
     return _defaultLayer;
 }
 
-let _actionLayer: Konva.Layer|null;
-export function actionLayer(layer?: Konva.Layer): Konva.Layer|null {    
+let _actionLayer: Konva.Layer | null;
+export function actionLayer(layer?: Konva.Layer): Konva.Layer | null {
     if (layer !== undefined) {
         _actionLayer = layer;
         layer.setAttr('name', 'action');
@@ -108,9 +127,9 @@ export function selectionAddresses(s?: string[]): string[] {
         s.forEach(a => select(getByAddress(a)));
     }
     return _selection
-    .filter(a => (a instanceof Component))
-    .map(a => address((a as any) as Addressable))
-    .sort();
+        .filter(a => (a instanceof Component))
+        .map(a => address((a as any) as Addressable))
+        .sort();
 }
 
 export function clearSelection() {
@@ -133,12 +152,12 @@ export interface StageState {
 }
 
 export function fullState(): StageState {
-     let z: StageState = {
+    let z: StageState = {
         components: [],
         selection: selectionAddresses(),
-     }
-     roots.forEach((v, k) => {
-         z.components.push((v as Component).serialize());
-     })
-     return z;
+    }
+    roots.forEach((v, k) => {
+        z.components.push((v as Component).serialize());
+    })
+    return z;
 }

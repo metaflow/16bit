@@ -1,7 +1,7 @@
 import Konva from 'konva';
 import { Wire, WirePoint, removeRedundantPoints, addHelperPoints } from '../components/wire';
 import { Action, actionDeserializers } from '../action';
-import { closesetContact, toScreen, actionLayer, defaultLayer, getPhysicalCursorPosition } from '../stage';
+import { closesetContact, toScreen, actionLayer, defaultLayer, getPhysicalCursorPosition, pointAsNumber, gridAlignment } from '../stage';
 import { Contact } from '../components/contact';
 import { getByAddress, removeAddressRoot, newAddress } from '../address';
 
@@ -28,7 +28,6 @@ export class AddOrthogonalWireAction implements Action {
         const a = newAddress();
         this.wire = new Wire(a);
         const w = this.wire;
-        w.orthogonal(true);
         const s = w.spec();
         s.points = this.points.map(p => ({
             helper: false,
@@ -53,25 +52,25 @@ export class AddOrthogonalWireAction implements Action {
     mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean {
         if (this.points.length == 0) return false;
         const pp: number[] = [];
-        for (const x of this.points) {
-            pp.push(...toScreen(x.x, x.y));
+        for (const xy of this.points) {
+            pp.push(...pointAsNumber(toScreen(xy)));
         }
         const xy = this.orthogonalCursor();
-        pp.push(...toScreen(xy[0], xy[1]));
+        pp.push(...pointAsNumber(toScreen(xy)));
         this.line.points(pp);
         return false;
     }
 
     orthogonalCursor() {
-        const xy = getPhysicalCursorPosition(); // TODO: return vector2d
+        const xy = getPhysicalCursorPosition(gridAlignment());
         if (this.points.length == 0) return xy;
         const last = this.points[this.points.length - 1];
-        const dx = Math.abs(xy[0] - last.x);
-        const dy = Math.abs(xy[1] - last.y);
+        const dx = Math.abs(xy.x - last.x);
+        const dy = Math.abs(xy.y - last.y);
         if (dx < dy) {
-            xy[0] = last.x;
+            xy.x = last.x;
         } else {
-            xy[1] = last.y;
+            xy.y = last.y;
         }
         return xy;
     }
@@ -80,7 +79,7 @@ export class AddOrthogonalWireAction implements Action {
         if (event.evt.button != 0) return true;
         const xy = this.orthogonalCursor();
         console.log(event);
-        this.points.push({ x: xy[0], y: xy[1] });
+        this.points.push(xy);
         return false;
     }
 
