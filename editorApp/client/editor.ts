@@ -6,7 +6,7 @@ import { newAddress } from './address';
 import { SelectAction } from './actions/select_action';
 import { ic74x245 } from './components/74x245';
 import { PlaceComponentAction } from './actions/add_ic_action';
-import { AddOrthogonalWireAction } from './actions/add_orthogonal_wire';
+import { AddWireAction } from './actions/add_wire';
 
 (window as any).add245 = function () {
   console.log('add 245');
@@ -18,7 +18,7 @@ import { AddOrthogonalWireAction } from './actions/add_orthogonal_wire';
 };
 
 (window as any).addOrthogonal = function() {
-  appActions.current(new AddOrthogonalWireAction());
+  appActions.current(new AddWireAction());
 };
 
 (window as any).toolSelect = function() {
@@ -32,6 +32,11 @@ stage(new Konva.Stage({
   width: 1000,
   height: 1000
 }));
+
+document.getElementById('container')?.addEventListener('contextmenu', e => {
+  console.log('on context menu');
+  e.preventDefault()
+});
 
 // then create layer
 stage()?.add(defaultLayer(new Konva.Layer()));
@@ -50,6 +55,7 @@ stage()?.on('mousemove', function (e: Konva.KonvaEventObject<MouseEvent>) {
 });
 
 stage()?.on('mousedown', function (e) {
+  e.evt.preventDefault(); // Disable scroll on middle button click.
   if (appActions.onMouseDown(e)) {
     defaultLayer()?.batchDraw();
     actionLayer()?.batchDraw();

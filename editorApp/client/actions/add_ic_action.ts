@@ -1,22 +1,20 @@
 import { Action, actionDeserializers } from "../action";
 import { KonvaEventObject } from "konva/types/Node";
 import { Component, deserializeComponent } from "../components/component";
-import { getPhysicalCursorPosition, actionLayer, defaultLayer, pointAsNumber, gridAlignment } from "../stage";
+import { getPhysicalCursorPosition, actionLayer, defaultLayer, pointAsNumber, gridAlignment, Point, alignPoint } from "../stage";
 
 actionDeserializers.push(function(data: any): Action|null {
     if (data['typeMarker'] !== 'PlaceComponentAction') return null;
     let c = deserializeComponent(data['spec']);
     if (c == null) return null;
     let z = new PlaceComponentAction(c);
-    z.x = z.component.x();
-    z.y = z.component.y();
+    z.xy = z.component.xy();
     return z;
 });
 
 export class PlaceComponentAction implements Action {
     actionType: string = 'PlaceComponentAction';
-    x: number = 0;
-    y: number = 0;
+    xy: Point = {x: 0, y: 0};
     component: Component;
     constructor(component: Component) {
         this.component = component;
@@ -25,8 +23,7 @@ export class PlaceComponentAction implements Action {
         this.component.show(actionLayer());
     }
     apply(): void {
-        this.component.x(this.x);
-        this.component.y(this.y);
+        this.component.xy(this.xy);
         this.component.mainColor('black');
         this.component.updateLayout();
         this.component.show(defaultLayer());
@@ -37,9 +34,9 @@ export class PlaceComponentAction implements Action {
         this.component.hide();
     }
     mousemove(event: KonvaEventObject<MouseEvent>): boolean {        
-        [this.x, this.y] = pointAsNumber(getPhysicalCursorPosition(gridAlignment()));
-        this.component.x(this.x);
-        this.component.y(this.y);
+        this.xy = alignPoint(getPhysicalCursorPosition(), gridAlignment());
+        console.log('add IC xy', this.xy, gridAlignment());
+        this.component.xy(this.xy);
         this.component.updateLayout();
         return false;
     }

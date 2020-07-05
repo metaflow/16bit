@@ -1,7 +1,5 @@
-import { Addressable, newAddress } from "../address";
 import Konva from "konva";
 import { appActions } from "../action";
-import { AddContactWireAction } from "../actions/add_wire_action";
 import { scale, addContact, removeContact } from "../stage";
 import { Component } from "./component";
 
@@ -21,16 +19,17 @@ export class Contact extends Component {
         this.updateLayout();
     }
     materialized(b?:boolean): boolean {
-        const p = this._materialized;
-        const z = super.materialized(b);
-        if (p != z) {
-            if (z)  {
+        let p = this._materialized;
+        if (b !== undefined && p != b) {
+            if (b)  {
+                p = super.materialized(b);
                 addContact(this);
             } else {
                 removeContact(this);
+                p = super.materialized(b);
             }
-        }        
-        return z;
+        }
+        return p;
     }
     setupEvents() {
         const c = this;
@@ -38,7 +37,7 @@ export class Contact extends Component {
             console.log('mousedown on contact');
             e.cancelBubble = true;
             if (appActions.onMouseDown(e)) return;
-            appActions.current(new AddContactWireAction(c));
+            // TODO: appActions.current(new AddContactWireAction(c));
         });
     }
     updateLayout(): void {

@@ -89,8 +89,12 @@ export abstract class Component implements Addressable {
         if (this._parent != null) return this._parent.y() + this._y;
         return this._y;
     }
-    xy(): Point {
-        return point(this._x, this._y);
+    xy(v?: Point): Point {
+        if (v != undefined) {
+            this.x(v.x);
+            this.y(v.y);
+        }
+        return point(this.x(), this.y());
     }
     show(layer: Konva.Layer | null) {
         this.shapes.moveTo(layer);

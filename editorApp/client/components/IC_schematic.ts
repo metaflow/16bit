@@ -54,7 +54,7 @@ export class IntegratedCircuitSchematic extends Component {
             this.left_labels.push(t);
             this.shapes.add(t);
             if (s === "") continue;
-            const c = new Contact(s, - pin_length, (i + 0.5) * contact_height + gap);
+            const c = new Contact(s, - pin_length, (i + 1) * contact_height);
             this.contacts.push(this.addChild(c));
             this.pin_lines.push(new Konva.Line({ points: [0, 0, 0, 0], stroke: 'black' }));
         }
@@ -64,7 +64,7 @@ export class IntegratedCircuitSchematic extends Component {
             this.right_labels.push(t);
             this.shapes.add(t);
             if (s === "") continue;
-            const c = new Contact(s, width + pin_length, (i + 0.5) * contact_height + gap);            
+            const c = new Contact(s, width + pin_length, (i + 1) * contact_height);            
             this.contacts.push(this.addChild(c));
             this.pin_lines.push(new Konva.Line({ points: [0, 0, 0, 0], stroke: 'black' }));
         }
@@ -79,7 +79,8 @@ export class IntegratedCircuitSchematic extends Component {
         let [x, y] = pointAsNumber(toScreen(this.xy()));
         this.rect.x(x);
         this.rect.y(y);
-        this.rect.height((Math.max(this.left_pins.length, this.right_pins.length) * contact_height + gap * 2) * scale());
+        const pins = Math.max(this.left_pins.length, this.right_pins.length);
+        this.rect.height(((pins + 1) * contact_height) * scale());
         this.rect.width(width * scale());
         this.rect.stroke(this.mainColor());
         for (const a of this.left_labels) {
@@ -96,7 +97,7 @@ export class IntegratedCircuitSchematic extends Component {
         for (let i = 0; i < this.left_pins.length; i++) {
             this.left_labels[i].width(contact_label_width * scale());
             this.left_labels[i].x(x + gap * scale());
-            this.left_labels[i].y(y + (gap + (i + 0.5) * contact_height - 0.5 * label_font_size) * scale());
+            this.left_labels[i].y(y + ((i + 1) * contact_height - 0.5 * label_font_size) * scale());
             if (this.left_pins[i] === "") continue;
             const c = this.contacts[j];
             this.pin_lines[j].points([c.x() * scale(), c.y() * scale(), this.rect.x(), c.y() * scale()]);
@@ -106,7 +107,7 @@ export class IntegratedCircuitSchematic extends Component {
         for (let i = 0; i < this.right_pins.length; i++) {
             this.right_labels[i].width(contact_label_width * scale())
             this.right_labels[i].x(x + (width - gap - contact_label_width) * scale());
-            this.right_labels[i].y(y + (gap + (i + 0.5) * contact_height - 0.5 * label_font_size) * scale());
+            this.right_labels[i].y(y + ((i + 1) * contact_height - 0.5 * label_font_size) * scale());
             if (this.right_pins[i] === "") continue;
             const c = this.contacts[j];
             this.pin_lines[j].points([c.x() * scale(), c.y() * scale(), this.rect.x() + this.rect.width(), c.y() * scale()]);

@@ -61,9 +61,9 @@ export class WirePoint extends Component implements Selectable {
             if (point.selected()) {
                 // TODO: make selection filter by type.
                 const points: WirePoint[] = selection().filter(x => x instanceof WirePoint).map(x => x as any as WirePoint);
-                appActions.current(new MoveWirePointAction(points, getPhysicalCursorPosition(null)));
+                appActions.current(new MoveWirePointAction(points, getPhysicalCursorPosition()));
             } else {
-                appActions.current(new MoveWirePointAction([point], getPhysicalCursorPosition(null)));
+                appActions.current(new MoveWirePointAction([point], getPhysicalCursorPosition()));
             }
         });
         this.shapes.add(this.selectionRect);

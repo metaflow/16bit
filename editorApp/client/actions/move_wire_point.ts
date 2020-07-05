@@ -121,7 +121,7 @@ export class MoveWirePointAction implements Action {
       s.auxWire?.show(actionLayer());
     }
     console.log('wire move states', this.states);
-    if (origin === undefined) origin = getPhysicalCursorPosition(null);
+    if (origin === undefined) origin = getPhysicalCursorPosition();
     this.from = origin;
     this.to = origin;
   }
@@ -155,7 +155,7 @@ export class MoveWirePointAction implements Action {
     selectionAddresses(this.selection);
   }
   mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean {
-    this.to = getPhysicalCursorPosition(null);
+    this.to = getPhysicalCursorPosition();
     const dxy = pointSub(this.to, this.from);
     for (const s of this.states) {
       const sp = moveSingleWire(dxy, s);
@@ -168,7 +168,7 @@ export class MoveWirePointAction implements Action {
     return false;
   }
   mouseup(event: Konva.KonvaEventObject<MouseEvent>): boolean {
-    this.to = getPhysicalCursorPosition(null);
+    this.to = getPhysicalCursorPosition();
     return true;
   }
   cancel(): void {

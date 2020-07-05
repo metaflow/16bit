@@ -25,9 +25,9 @@ export function getCursorPosition(): Point {
     return pos;
 }
 
-export function getPhysicalCursorPosition(align: number|null): Point {
+export function getPhysicalCursorPosition(): Point {
     const xy = getCursorPosition();
-    return toPhysical(xy, align);
+    return toPhysical(xy);
 }
 
 export function scale(): number {
@@ -38,7 +38,7 @@ export function toScreen(xy: Point): Point {
     return point(xy.x * scale(), xy.y * scale());
 }
 
-export function toPhysical(xy: Point, align: number|null): Point {
+export function toPhysical(xy: Point): Point {
     let x = xy.x / scale();
     let y = xy.y / scale();    
     return point(x, y);
@@ -79,7 +79,7 @@ export function distance(c: [number, number, number, number]): number {
 export function closesetContact(xy?: Point): Contact | null {
     if (xy === undefined) {
         const pos = getCursorPosition();
-        xy = toPhysical(pos, null);
+        xy = toPhysical(pos);
     }
     let z: Contact | null = null;
     let dz = 0;
