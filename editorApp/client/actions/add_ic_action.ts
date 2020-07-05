@@ -3,8 +3,10 @@ import { KonvaEventObject } from "konva/types/Node";
 import { Component, deserializeComponent } from "../components/component";
 import { getPhysicalCursorPosition, actionLayer, defaultLayer, pointAsNumber, gridAlignment, Point, alignPoint } from "../stage";
 
+const marker = 'PlaceComponentAction';
+
 actionDeserializers.push(function(data: any): Action|null {
-    if (data['typeMarker'] !== 'PlaceComponentAction') return null;
+    if (data['typeMarker'] !== marker) return null;
     let c = deserializeComponent(data['spec']);
     if (c == null) return null;
     let z = new PlaceComponentAction(c);
@@ -13,7 +15,6 @@ actionDeserializers.push(function(data: any): Action|null {
 });
 
 export class PlaceComponentAction implements Action {
-    actionType: string = 'PlaceComponentAction';
     xy: Point = {x: 0, y: 0};
     component: Component;
     constructor(component: Component) {
@@ -50,7 +51,7 @@ export class PlaceComponentAction implements Action {
     }
     serialize(): any {
         return  {
-            'typeMarker': 'PlaceComponentAction',
+            'typeMarker': marker,
             'spec': this.component.spec(),
         }
     }

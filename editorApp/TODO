@@ -6,6 +6,7 @@
 - option to align to grid
 - align to IC contacts
 - option to align to contacts
+- add non orthogonal action (make it parameter of a stage)
 - fix start / end wire point
 - schematic
     - toolbar to add components

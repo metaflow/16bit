@@ -5,9 +5,10 @@ import { Wire, WirePoint, WireSpec, WirePointSpec, removeRedundantPoints, addHel
 import { getByAddress, getTypedByAddress, newAddress, copy } from '../address';
 import assertExists from 'ts-assert-exists';
 
+const marker = 'MoveWirePointAction';
 
 actionDeserializers.push(function (data: any): Action | null {
-  if (data['typeMarker'] !== 'MoveWirePointAction') return null;
+  if (data['typeMarker'] !== marker) return null;
   const s: spec = data['spec'];
   let z = new MoveWirePointAction(s.points.map(a => getByAddress(a)), s.from);
   z.selection = s.selection;
@@ -85,7 +86,6 @@ function moveSingleWire(dxy: Point, s: SingleWireMove): WirePointSpec[] {
 }
 
 export class MoveWirePointAction implements Action {
-  actionType = "MoveWirePointAction";
   states: SingleWireMove[] = [];
   affectedPointsAddresses: string[];
   from: Point;
@@ -127,7 +127,7 @@ export class MoveWirePointAction implements Action {
       selection: this.selection,
     };
     return {
-      'typeMarker': 'MoveWirePointAction',
+      'typeMarker': marker,
       'spec': z,
     }
   }

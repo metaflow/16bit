@@ -4,6 +4,7 @@ import { Contact } from './components/contact';
 import { address, Addressable, roots, getByAddress } from './address';
 import { Selectable } from './actions/select_action';
 import { Component } from './components/component';
+import { typeGuard } from './utils';
 
 let _stage: Konva.Stage | null = null;
 let _gridAlignment: number | null = null;
@@ -40,13 +41,13 @@ export function toScreen(xy: Point): Point {
 
 export function toPhysical(xy: Point): Point {
     let x = xy.x / scale();
-    let y = xy.y / scale();    
+    let y = xy.y / scale();
     return point(x, y);
 }
 
-export function alignPoint(xy: Point, a: number|null): Point {
+export function alignPoint(xy: Point, a: number | null): Point {
     if (a == null) return xy;
-    return point( Math.round(xy.x / a) * a, Math.round(xy.y / a) * a);
+    return point(Math.round(xy.x / a) * a, Math.round(xy.y / a) * a);
 }
 
 export function point(x: number, y: number): Point {
@@ -119,6 +120,10 @@ export function layerByName(name: string): Konva.Layer | null {
 let _selection: Selectable[] = [];
 export function selection(): Selectable[] {
     return _selection;
+}
+
+export function selectionByType<T>(q: { new(...args: any[]): T }): T[] {
+    return selection().filter(x => typeGuard(x, q)).map(x => x as any as T);
 }
 
 export function selectionAddresses(s?: string[]): string[] {

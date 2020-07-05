@@ -1,15 +1,13 @@
 import Konva from 'konva';
 import { Contact } from './contact';
-import { scale, toScreen, getPhysicalCursorPosition, selection, pointAsNumber, point } from '../stage';
+import { scale, toScreen, getPhysicalCursorPosition, selection, pointAsNumber, point, selectionByType } from '../stage';
 import { newAddress, getTypedByAddress } from '../address';
 import { Selectable } from '../actions/select_action';
 import { Component, ComponentSpec } from './component';
 import { appActions } from '../action';
 import { MoveWirePointAction } from '../actions/move_wire_point';
-import assertExists from 'ts-assert-exists';
 
 export interface WirePointSpec {
-    address?: string; // TODO: why we need an address?
     contact?: string | null;
     helper: boolean;
     super: ComponentSpec;
@@ -55,8 +53,7 @@ export class WirePoint extends Component implements Selectable {
             console.log('click on wire point');
             e.cancelBubble = true;
             if (point.selected()) {
-                // TODO: make selection filter by type.
-                const points: WirePoint[] = selection().filter(x => x instanceof WirePoint).map(x => x as any as WirePoint);
+                const points: WirePoint[] = selectionByType(WirePoint);
                 appActions.current(new MoveWirePointAction(points, getPhysicalCursorPosition()));
             } else {
                 appActions.current(new MoveWirePointAction([point], getPhysicalCursorPosition()));
@@ -68,7 +65,7 @@ export class WirePoint extends Component implements Selectable {
     materialized(b?: boolean): boolean {
         let z = super.materialized(b);
         if (z) {
-            this.selectionRect.attrs['address'] = this.address(); // TODO: make address() check that this component is accessible from the root.
+            this.selectionRect.attrs['address'] = this.address();
         }
         return z;
     }

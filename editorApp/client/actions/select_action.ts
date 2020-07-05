@@ -3,19 +3,21 @@ import Konva from "konva";
 import { stage, getCursorPosition, actionLayer, select, selectionAddresses, clearSelection } from "../stage";
 import { getByAddress } from "../address";
 
+const marker = 'SelectAction';
+
 export interface Selectable {
     selectableInterface: true;
     selected(v?: boolean): boolean;
 }
 
-actionDeserializers.push(function(data: any): Action|null {
-    if (data['typeMarker'] !== 'SelectAction') return null;
-    const s: Spec = data['spec']; 
+actionDeserializers.push(function (data: any): Action | null {
+    if (data['typeMarker'] !== marker) return null;
+    const s: Spec = data['spec'];
     let z = new SelectAction();
     z.newSelection = s.newSelection;
     z.prevSelection = s.prevSelection;
     return z;
-  });
+});
 
 interface Spec {
     prevSelection: string[];
@@ -23,14 +25,11 @@ interface Spec {
 }
 
 export class SelectAction implements Action {
-    actionType = "SelectAction";
-    rect: Konva.Rect|null = null;
+    rect: Konva.Rect | null = null;
     prevSelection: string[];
     newSelection: string[] = [];
     constructor() {
         this.prevSelection = selectionAddresses();
-        
-       
     }
     apply(): void {
         clearSelection();
@@ -53,12 +52,12 @@ export class SelectAction implements Action {
             return Konva.Util.haveIntersection(r, shape.getClientRect());
         });
         this.newSelection = [];
-        for (const s of selected) {            
+        for (const s of selected) {
             const a = s.attrs['address'];
             this.newSelection.push(a);
             const x = getByAddress(a);
         }
-        this.apply();        
+        this.apply();
         return false;
     }
     mousedown(event: Konva.KonvaEventObject<MouseEvent>): boolean {
@@ -76,7 +75,7 @@ export class SelectAction implements Action {
         let pos = getCursorPosition();
         this.rect.width(pos.x - this.rect.x());
         this.rect.height(pos.y - this.rect.y());
-        
+
         this.rect.remove();
         return true;
     }
@@ -85,12 +84,12 @@ export class SelectAction implements Action {
     }
     serialize(): any {
         let z: Spec = {
-prevSelection : this.prevSelection,
-newSelection: this.newSelection,
+            prevSelection: this.prevSelection,
+            newSelection: this.newSelection,
         };
-      return {
-            'typeMarker': 'SelectAction',
+        return {
+            'typeMarker': marker,
             'spec': z,
-          };
+        };
     }
 }

@@ -1,11 +1,11 @@
 import Konva from 'konva';
 import { fullState, StageState } from './stage';
 import {diffString} from 'json-diff';
+import { json } from 'express';
 
 export const actionDeserializers: { (data: any): (Action | null) }[] = [];
 
 export interface Action {
-    actionType: string; // TODO: is not used properly, individual serializers should not set action type.
     apply(): void;
     undo(): void;
     mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean;
@@ -13,11 +13,6 @@ export interface Action {
     mouseup(event: Konva.KonvaEventObject<MouseEvent>): boolean;
     cancel(): void;
     serialize(): any;
-}
-
-interface serializedAction {
-    type: string;
-    data: any;
 }
 
 const debugActions = true;
@@ -119,7 +114,7 @@ export class Actions {
                 if (a !== null) break;
             }
             if (a == null) {
-                console.error(`Cannot apply deserialized action "${data}"`);
+                console.error(`Cannot apply deserialized action "${JSON.stringify(data)}"`);
                 break;
             }
             a.apply();
