@@ -1,33 +1,45 @@
-import { Addressable, address, addAddressRoot, removeAddressRoot } from "../address";
+import { Addressable, address, addAddressRoot, removeAddressRoot, newAddress } from "../address";
 import Konva from "konva";
 import { Selectable } from "../actions/select_action";
 import { stage, select, Point, point } from "../stage";
+import assertExists from "ts-assert-exists";
 
 export const componentDeserializers: { (data: any): (Component | null) }[] = [];
 
+export interface ComponentSpec {
+    xy: Point;
+    id?: string;
+}
+
 export abstract class Component implements Addressable {
-    _id = '';
+    // _id = '';
     _parent: Component | null = null;
-    _y = 0;
-    _x = 0;
+    // _y = 0;
+    // _x = 0;
+    componentSpec: ComponentSpec;
     children = new Map<string, Component>();
     shapes = new Konva.Group();
     _mainColor = 'black';
     typeMarker: string = 'Component';
     _materialized = false; // If this component really "exists" and accessabe from the address root.
-    // TODO: should serialize some of that^. add "onDeserialized()" so children can call parent with it's part of deserializetion.
-    constructor(id: string) {
-        this._id = id;
+    constructor(spec?: ComponentSpec) {
+        if (spec == undefined) {
+            spec = { xy: point(0, 0) };
+        }
+        this.componentSpec = spec;
     }
     materialized(b?: boolean): boolean {
         if (b === undefined) return this._materialized;
         if (this._materialized == b) return b;
         this._materialized = b;
-        if (b && this._parent == null) addAddressRoot(this);
+        if (b && this._parent == null) {
+            if (this.id() == null) this.id(newAddress());
+            addAddressRoot(this);
+        }
         this.children.forEach(c => c.materialized(b));
         if (!b) {
             if (this._parent == null) {
-                removeAddressRoot(this.id());
+                removeAddressRoot(assertExists(this.id()));
             }
             if ((this as any).selectableInterface) {
                 select(this, false);
@@ -50,11 +62,15 @@ export abstract class Component implements Addressable {
     }
     addChild<T extends Component>(c: T): T {
         // this.shapes.add(c.shapes);
-        if (this.children.has(c.id())) {
+        const id = c.id();
+        if (id == null) {
+            throw new Error('child id is not set');            
+        }
+        if (this.children.has(id)) {
             throw new Error(`child with id "${c.id()}" already present`);
         }
         c.parent(this);
-        this.children.set(c.id(), c);
+        this.children.set(id, c);
         c.mainColor(this.mainColor());
         c.show(this.shapes.getLayer() as Konva.Layer);
         c.materialized(this.materialized());
@@ -72,22 +88,25 @@ export abstract class Component implements Addressable {
         }
         return address(this);
     }
-    id(): string {
-        return this._id;
+    id(v?: string): string | undefined {
+        if (v != undefined) {
+            this.componentSpec.id = v;
+        }
+        return this.componentSpec.id;
     }
     x(newX?: number): number {
         if (newX !== undefined) {
-            this._x = newX;
+            this.componentSpec.xy.x = newX;
         }
-        if (this._parent != null) return this._parent.x() + this._x;
-        return this._x;
+        if (this._parent != null) return this._parent.x() + this.componentSpec.xy.x;
+        return this.componentSpec.xy.x;
     }
     y(newY?: number): number {
         if (newY !== undefined) {
-            this._y = newY;
+            this.componentSpec.xy.y = newY;
         }
-        if (this._parent != null) return this._parent.y() + this._y;
-        return this._y;
+        if (this._parent != null) return this._parent.y() + this.componentSpec.xy.y;
+        return this.componentSpec.xy.y;
     }
     xy(v?: Point): Point {
         if (v != undefined) {
@@ -111,7 +130,9 @@ export abstract class Component implements Addressable {
         this.parent(null);
     }
     removeChild(x: Component) {
-        this.children.delete(x.id());
+        const id = x.id();
+        if (id == null) throw new Error('child id is not set');
+        this.children.delete(id);
     }
     updateLayout() {
         this.children.forEach(c => c.updateLayout());
@@ -123,8 +144,8 @@ export abstract class Component implements Addressable {
         }
         return this._mainColor;
     }
-    serialize(): any {
-        return {}
+    spec(): any {
+        return this.componentSpec;
     }
 }
 

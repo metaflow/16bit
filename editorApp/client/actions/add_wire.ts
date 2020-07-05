@@ -1,9 +1,8 @@
 import Konva from 'konva';
-import { Wire, WirePoint, removeRedundantPoints, addHelperPoints } from '../components/wire';
+import { Wire, removeRedundantPoints, addHelperPoints } from '../components/wire';
 import { Action, actionDeserializers } from '../action';
-import { closesetContact, toScreen, actionLayer, defaultLayer, getPhysicalCursorPosition, pointAsNumber, gridAlignment, alignPoint, scale, toPhysical } from '../stage';
-import { Contact } from '../components/contact';
-import { getByAddress, removeAddressRoot, newAddress } from '../address';
+import { toScreen, actionLayer, defaultLayer, getPhysicalCursorPosition, pointAsNumber, gridAlignment, alignPoint, scale, point } from '../stage';
+import { newAddress } from '../address';
 
 export class AddWireAction implements Action {
     actionType = "AddWireAction";
@@ -37,18 +36,15 @@ export class AddWireAction implements Action {
         return false;
     }
     apply() {
-        const a = newAddress();
-        this.wire = new Wire(a);
-        const w = this.wire;
-        const s = w.spec();
-        s.points = this.points.map(p => ({
+        let s = removeRedundantPoints(this.points.map(p => ({
             helper: false,
-            x: p.x,
-            y: p.y,
-        }));
-        removeRedundantPoints(s);
-        addHelperPoints(s);
-        this.wire.spec(s);
+            super: { xy: p },
+        })));
+        s = addHelperPoints(s);
+        this.wire = new Wire({
+            super: { id: newAddress(), xy: point(0, 0) },
+            points: s,
+        });
         this.wire.updateLayout();
         this.wire.materialized(true);
         this.wire.show(defaultLayer());
@@ -118,5 +114,6 @@ actionDeserializers.push(function (data: any): Action | null {
     const spec = data['spec'];
     const z = new AddWireAction();
     z.points = spec.points;
+    console.log('add wire', spec);
     return z;
 });

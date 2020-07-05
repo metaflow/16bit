@@ -10,7 +10,7 @@ import { AddWireAction } from './actions/add_wire';
 
 (window as any).add245 = function () {
   console.log('add 245');
-  appActions.current(new PlaceComponentAction(new ic74x245({ id: newAddress(), x: 0, y: 0})));
+  appActions.current(new PlaceComponentAction(new ic74x245()));
 };
 
 (window as any).clearActionsHistory = function () {

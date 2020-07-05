@@ -35,7 +35,6 @@ export class PlaceComponentAction implements Action {
     }
     mousemove(event: KonvaEventObject<MouseEvent>): boolean {        
         this.xy = alignPoint(getPhysicalCursorPosition(), gridAlignment());
-        console.log('add IC xy', this.xy, gridAlignment());
         this.component.xy(this.xy);
         this.component.updateLayout();
         return false;
@@ -52,7 +51,7 @@ export class PlaceComponentAction implements Action {
     serialize(): any {
         return  {
             'typeMarker': 'PlaceComponentAction',
-            'spec': this.component.serialize(),
+            'spec': this.component.spec(),
         }
     }
 }

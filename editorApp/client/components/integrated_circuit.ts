@@ -1,8 +1,9 @@
-import { Component } from "./component";
+import { Component, ComponentSpec } from "./component";
 import Konva from "konva";
-import { toScreen, scale, pointAsNumber } from "../stage";
+import { toScreen, scale, pointAsNumber, point } from "../stage";
 import { newAddress } from "../address";
 import { Contact } from "./contact";
+import { IntegratedCircuitSchematic } from "./IC_schematic";
 
 const gap = 1;
 const height = 2.54 * 2;
@@ -10,6 +11,12 @@ const contact_width = 2.54;
 const pin_length = 2.54 / 2;
 const label_font_size = 2.5;
 const arc_r = 1;
+
+interface IntegratedCircuitSpec { 
+    pins: string[];
+    label: string;
+    super: ComponentSpec;
+};
 
 export class IntegratedCircuit extends Component {
     rect: Konva.Rect;
@@ -19,11 +26,9 @@ export class IntegratedCircuit extends Component {
 
     pins: string[];
     contacts: Contact[] = [];
-    constructor(spec: { id: string, pins: string[], x: number, y: number, layer: Konva.Layer|null, label: string }) {
-        super(spec.id);
+    constructor(spec: IntegratedCircuitSpec) {
+        super(spec.super);
         this.pins = spec.pins;
-        this.x(spec.x);
-        this.y(spec.y);
         this.rect = new Konva.Rect({
             stroke: 'black',
             strokeWidth: 1,
@@ -36,11 +41,11 @@ export class IntegratedCircuit extends Component {
         }
         const w = Math.floor((this.pins.length + 1) / 2);
         for (let i = 0; i < w; i++) {
-            const c = new Contact(newAddress(this), (i + 0.5) * contact_width + gap, height + pin_length);
+            const c = new Contact({ id: newAddress(this), xy: point((i + 0.5) * contact_width + gap, height + pin_length)});
             this.contacts.push(this.addChild(c));
         }
         for (let i = w; i < this.pins.length; i++) {
-            let c = new Contact(newAddress(this), (this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length);
+            let c = new Contact({id: newAddress(this), xy: point((this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length)});
             this.addChild(c);
             this.contacts.push(c);
         }

@@ -1,7 +1,7 @@
 import { Component } from "./components/component";
 
 export interface Addressable {
-    id(): string;
+    id(): string|undefined;
     addressParent(): Addressable | null;
     addressChild(id: string): Addressable | null | undefined;
 }
@@ -9,10 +9,12 @@ export interface Addressable {
 export const roots = new Map<string, Addressable>();
 
 export function addAddressRoot(r: Addressable) {
-    if (roots.has(r.id())) {
+    const id = r.id();
+    if (id == null) return;
+    if (roots.has(id)) {
         throw new Error(`address root "${r.id()}" already exists`);
     }
-    roots.set(r.id(), r);
+    roots.set(id, r);
 }
 
 export function removeAddressRoot(id: string) {
@@ -54,6 +56,10 @@ export function getTypedByAddress<T>(q: { new(...args: any[]): T }, address?: st
     return null;
 }
 
+export function copy<T>(v: T): T {
+    return JSON.parse(JSON.stringify(v));
+}
+
 export function getByAddress(address?: string): any | null {
     if (address == null) {
         console.error('passed address is null', address);
@@ -88,14 +94,24 @@ export function newAddress(p?: Component): string {
 export function address(a: Addressable | null): string {
     if (a === null) return "";
     const o = a;
-    let z = a.id();
+    let id = a.id();
+    if (id == null) {
+        console.error(a, 'id is not set');
+        return '';
+    }
+    let z = id;    
     let t = a.addressParent()
     while (t != null) {
         z = t.id() + ':' + z;
         a = t;
+        id = a.id();
+        if (id == null) {
+            console.error(a, 'id is not set');
+            return '';
+        }
         t = t.addressParent();
     }
-    if (!roots.has(a.id())) {
+    if (!roots.has(id)) {
         console.error('address', z, 'of', o, 'does not starts from the root');
     }
     return z;

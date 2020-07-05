@@ -157,7 +157,7 @@ export function fullState(): StageState {
         selection: selectionAddresses(),
     }
     roots.forEach((v, k) => {
-        z.components.push((v as Component).serialize());
+        z.components.push((v as Component).spec());
     })
     return z;
 }

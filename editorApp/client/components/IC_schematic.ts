@@ -1,13 +1,15 @@
-import { Component, componentDeserializers } from "./component";
+import { Component, componentDeserializers, ComponentSpec } from "./component";
 import Konva from "konva";
-import { toScreen, scale, pointAsNumber } from "../stage";
+import { toScreen, scale, pointAsNumber, point } from "../stage";
 import { Contact } from "./contact";
 
+const marker = 'IntegratedCircuitSchematic';
+
 componentDeserializers.push(function (data: any): (IntegratedCircuitSchematic | null) {
-    if (data['typeMarker'] !== 'IntegratedCircuitSchematic') {
+    if (data['type_marker'] !== marker) {
         return null
     }
-    return new IntegratedCircuitSchematic(data['spec'] as Spec);
+    return new IntegratedCircuitSchematic(data['spec'] as IntegratedCircuitSchematicSpec);
 });
 
 const gap = 1;
@@ -17,17 +19,15 @@ const contact_label_width = 5;
 const pin_length = 5;
 const label_font_size = 3;
 
-interface Spec {
-    id: string;
+export interface IntegratedCircuitSchematicSpec {
+    type_marker? : string;
     left_pins: string[];
     right_pins: string[];
-    x: number;
-    y: number;
-    label: string
+    label: string;
+    super?: ComponentSpec;
 }
 
 export class IntegratedCircuitSchematic extends Component {
-    typeMarker = "IntegratedCircuitSchematic";
     rect: Konva.Rect;
     name: Konva.Text;
     left_pins: string[] = [];
@@ -37,12 +37,10 @@ export class IntegratedCircuitSchematic extends Component {
     contacts: Contact[] = [];
     pin_lines: Konva.Line[] = [];
 
-    constructor(spec: Spec) {
-        super(spec.id);
+    constructor(spec: IntegratedCircuitSchematicSpec) {
+        super(spec.super);
         this.left_pins = spec.left_pins;
         this.right_pins = spec.right_pins;
-        this.x(spec.x);
-        this.y(spec.y);
         this.rect = new Konva.Rect({
             stroke: 'black',
             strokeWidth: 1,
@@ -54,7 +52,7 @@ export class IntegratedCircuitSchematic extends Component {
             this.left_labels.push(t);
             this.shapes.add(t);
             if (s === "") continue;
-            const c = new Contact(s, - pin_length, (i + 1) * contact_height);
+            const c = new Contact({ id: s, xy: point(- pin_length, (i + 1) * contact_height) });
             this.contacts.push(this.addChild(c));
             this.pin_lines.push(new Konva.Line({ points: [0, 0, 0, 0], stroke: 'black' }));
         }
@@ -64,7 +62,7 @@ export class IntegratedCircuitSchematic extends Component {
             this.right_labels.push(t);
             this.shapes.add(t);
             if (s === "") continue;
-            const c = new Contact(s, width + pin_length, (i + 1) * contact_height);            
+            const c = new Contact({ id: s, xy: point(width + pin_length, (i + 1) * contact_height) });
             this.contacts.push(this.addChild(c));
             this.pin_lines.push(new Konva.Line({ points: [0, 0, 0, 0], stroke: 'black' }));
         }
@@ -120,18 +118,13 @@ export class IntegratedCircuitSchematic extends Component {
         this.name.fontSize(label_font_size * scale());
         this.name.fill(this.mainColor());
     }
-    serialize(): any {
-        let z: Spec = {
-            id: this.id(),
+    spec(): any {
+        return {
+            type_marker: marker,
             left_pins: this.left_pins,
             right_pins: this.right_pins,
-            x: this.x(),
-            y: this.y(),
             label: this.name.text(),
-        }
-        return {
-            'typeMarker': 'IntegratedCircuitSchematic',
-            'spec': z,
-        }
+            super: super.spec(),
+        } as IntegratedCircuitSchematicSpec;        
     }
 }

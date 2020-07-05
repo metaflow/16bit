@@ -2,7 +2,7 @@ import { Action, actionDeserializers } from '../action';
 import Konva from 'konva';
 import { getPhysicalCursorPosition, actionLayer, defaultLayer, selectionAddresses, Point, pointSub, alignPoint, gridAlignment, point } from '../stage';
 import { Wire, WirePoint, WireSpec, WirePointSpec, removeRedundantPoints, addHelperPoints } from '../components/wire';
-import { getByAddress, getTypedByAddress, newAddress } from '../address';
+import { getByAddress, getTypedByAddress, newAddress, copy } from '../address';
 import assertExists from 'ts-assert-exists';
 
 
@@ -26,68 +26,61 @@ interface spec {
 
 interface SingleWireMove {
   address: string;
-  originalSpec: WireSpec;
-  affectedPointsIds: string[];  // TODO: or set?
+  originalPoints: WirePointSpec[];
+  affectedPointsIds: (string|undefined)[];  // TODO: or set?
   auxWire?: Wire;
 };
 
-function moveSingleWire(dxy: Point, s: SingleWireMove): WireSpec {
+function moveSingleWire(dxy: Point, s: SingleWireMove): WirePointSpec[] {
   const w = assertExists(s.auxWire);
-  const z: WireSpec = {
-    id: "",
-    points: [],
-  };
+  let z: WirePointSpec[] = [];
   w.points.forEach(p => p.remove());
   const affected: boolean[] = [];
   const nextVertical: boolean[] = [];
   const nextHorizontal: boolean[] = [];
-  for (const p of s.originalSpec.points) {
-    const a = s.affectedPointsIds.indexOf(assertExists(p.id)) != -1;
+  for (const p of s.originalPoints) {
+    const a = s.affectedPointsIds.indexOf(assertExists(p.super.id)) != -1;
     if (p.helper && !a) continue;
     affected.push(a);
-    z.points.push({
+    z.push({
       helper: p.helper,
-      x: p.x,
-      y: p.y,
-      id: p.id,
+      super: copy(p.super),
     });
   }
-  for (let i = 0; i < z.points.length; i++) {
-    if (i + 1 < z.points.length) {
-      nextVertical.push(z.points[i].x == z.points[i + 1].x);
-      nextHorizontal.push(z.points[i].y == z.points[i + 1].y);
+  for (let i = 0; i < z.length; i++) {
+    if (i + 1 < z.length) {
+      nextVertical.push(z[i].super.xy.x == z[i + 1].super.xy.x);
+      nextHorizontal.push(z[i].super.xy.y == z[i + 1].super.xy.y);
     }
     if (affected[i]) {
-      const xy = alignPoint(point(z.points[i].x + dxy.x, z.points[i].y + dxy.y), gridAlignment());
-      z.points[i].x = xy.x;
-      z.points[i].y = xy.y;
+      z[i].super.xy = alignPoint(point(z[i].super.xy.x + dxy.x, z[i].super.xy.y + dxy.y), gridAlignment());
     }
   }
-  for (let i = 0; i < z.points.length; i++) {
-    const p = z.points[i];
+  for (let i = 0; i < z.length; i++) {
+    const p = z[i];
     if (!affected[i] || p.helper) continue;
     if (i > 0 && !affected[i - 1]) {
       if (nextVertical[i - 1]) {
-        z.points[i - 1].x = p.x;
+        z[i - 1].super.xy.x = p.super.xy.x;
       }
       if (nextHorizontal[i - 1]) {
-        z.points[i - 1].y = p.y;
+        z[i - 1].super.xy.y = p.super.xy.y;
       }
     }
-    if (i + 1 < z.points.length) {
+    if (i + 1 < z.length) {
       if (nextVertical[i]) {
-        z.points[i + 1].x = p.x;
+        z[i + 1].super.xy.x = p.super.xy.x;
       }
       if (nextHorizontal[i]) {
-        z.points[i + 1].y = p.y;
+        z[i + 1].super.xy.y = p.super.xy.y;
       }
     }
   }
-  for (const p of z.points) {
+  for (const p of z) {
     p.helper = false;
   }
-  removeRedundantPoints(z);
-  addHelperPoints(z);
+  z = removeRedundantPoints(z);
+  z = addHelperPoints(z);
   return z;
 }
 
@@ -106,9 +99,9 @@ export class MoveWirePointAction implements Action {
       const w = getByAddress(a) as Wire;
       const s: SingleWireMove = {
         address: w.address(),
-        originalSpec: w.spec(),
+        originalPoints: w.pointsSpec(),
         affectedPointsIds: [],
-        auxWire: new Wire(""),  // TODO: make id optional if object is not going to be materialized and maybe make id parameter of "materialize".
+        auxWire: new Wire(),  // TODO: make id optional if object is not going to be materialized and maybe make id parameter of "materialize".
       };
       for (const p of points) {
         if (p.parent() == w) {
@@ -116,7 +109,7 @@ export class MoveWirePointAction implements Action {
         }
       }
       this.states.push(s);
-      s.auxWire?.spec(w.spec());
+      s.auxWire?.pointsSpec(w.pointsSpec());
       w.hide();
       s.auxWire?.show(actionLayer());
     }
@@ -143,14 +136,14 @@ export class MoveWirePointAction implements Action {
     for (const s of this.states) {
       const w = getByAddress(s.address) as Wire;
       let x = moveSingleWire(dxy, s);
-      w.spec(x);
+      w.pointsSpec(x);
       w.show(defaultLayer());
       s.auxWire?.hide();
     }
   }
   undo(): void {
     for (const w of this.states) {
-      (getByAddress(w.address) as Wire).spec(w.originalSpec);
+      (getByAddress(w.address) as Wire).pointsSpec(w.originalPoints);
     }
     selectionAddresses(this.selection);
   }
@@ -160,8 +153,8 @@ export class MoveWirePointAction implements Action {
     for (const s of this.states) {
       const sp = moveSingleWire(dxy, s);
       console.log('aux spec', sp);
-      s.auxWire?.spec(sp);
-    }
+      s.auxWire?.pointsSpec(sp);
+    } 
     return false;
   }
   mousedown(event: Konva.KonvaEventObject<MouseEvent>): boolean {

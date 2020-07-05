@@ -1,16 +1,14 @@
 import Konva from "konva";
 import { appActions } from "../action";
 import { scale, addContact, removeContact } from "../stage";
-import { Component } from "./component";
+import { Component, ComponentSpec } from "./component";
 
 const radius = 0.8;
 
 export class Contact extends Component {
     circle: Konva.Circle;
-    constructor(id: string, x: number, y: number) {
-        super(id);
-        this.x(x);
-        this.y(y);
+    constructor(spec: ComponentSpec) {
+        super(spec);
         this.circle = new Konva.Circle({
             radius: 1,
         });

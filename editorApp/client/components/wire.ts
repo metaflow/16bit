@@ -3,18 +3,16 @@ import { Contact } from './contact';
 import { scale, toScreen, getPhysicalCursorPosition, selection, pointAsNumber, point } from '../stage';
 import { newAddress, getTypedByAddress } from '../address';
 import { Selectable } from '../actions/select_action';
-import { Component } from './component';
+import { Component, ComponentSpec } from './component';
 import { appActions } from '../action';
 import { MoveWirePointAction } from '../actions/move_wire_point';
 import assertExists from 'ts-assert-exists';
 
 export interface WirePointSpec {
     address?: string; // TODO: why we need an address?
-    id?: string;
-    x: number;
-    y: number;
     contact?: string | null;
     helper: boolean;
+    super: ComponentSpec;
 }
 
 const wirePointSize = 3;
@@ -45,10 +43,8 @@ export class WirePoint extends Component implements Selectable {
     _selected: boolean = false;
     helper: boolean;
     constructor(spec: WirePointSpec) {
-        super(assertExists(spec.id));
+        super(spec.super);
         if (spec.contact != null) this._contact = getTypedByAddress(Contact, spec.contact);
-        if (spec.x !== undefined) this.x(spec.x);
-        if (spec.y !== undefined) this.y(spec.y);
         this.helper = spec.helper;
         this.selectionRect = new Konva.Rect({
             dash: [1, 1],
@@ -106,14 +102,12 @@ export class WirePoint extends Component implements Selectable {
     wire(): Wire {
         return this.parent() as Wire;
     }
-    spec(): WirePointSpec {
+    spec(): any {
         return {
-            id: this.id(),
             address: this.materialized() ? this.address() : undefined,
-            x: this.x(),
-            y: this.y(),
             contact: this.contact()?.address(),
             helper: this.helper,
+            super: super.spec(),
         }
     }
 }
@@ -121,15 +115,16 @@ export class WirePoint extends Component implements Selectable {
 const wireWidth = 0.5;
 
 export interface WireSpec {
-    id: string;
     points: WirePointSpec[];
+    super?: ComponentSpec;
 }
 
 export class Wire extends Component {
     line: Konva.Line;
     points: WirePoint[] = [];
-    constructor(id: string) {
-        super(id);
+    constructor(spec?: WireSpec) {
+        super(spec?.super);
+        console.log('wire()', spec);
         this.line = new Konva.Line({
             points: [],
             stroke: 'blue',
@@ -137,6 +132,8 @@ export class Wire extends Component {
             lineCap: 'round',
             lineJoin: 'round',
         });
+        this.pointsSpec(spec?.points);
+        // this._points = spec?.points.map(x => new WirePoint(x)) || [];
         this.shapes.add(this.line);
         this.updateLayout();
     }
@@ -158,25 +155,19 @@ export class Wire extends Component {
         }
         return this.points[i];
     }
-    serialize(): any {
-        return {
-            'typeMarker': 'ContactWire',
-            'spec': this.spec(),
-        }
-    }
-    spec(s?: WireSpec): WireSpec {
+    pointsSpec(v?: WirePointSpec[]): WirePointSpec[] {
         let o = this;
-        if (s !== undefined) {
+        if (v !== undefined) {
             o.points.forEach(p => p.remove());
             // Create points in two passes: first with known IDs, then new ones.
-            let pp = s.points.map(x => {
-                if (x.id == undefined) return null;
+            let pp = v.map(x => {
+                if (x.super.id == undefined) return null;
                 return o.addChild(new WirePoint(x));
             });
-            for (let i = 0; i < s.points.length; i++) {
-                const x = s.points[i];
-                if (x.id !== undefined) continue;
-                x.id = newAddress(o);
+            for (let i = 0; i < v.length; i++) {
+                const x = v[i];
+                if (x.super.id !== undefined) continue;
+                x.super.id = newAddress(o);
                 pp[i] = o.addChild(new WirePoint(x));
             }
             o.points = [];
@@ -185,36 +176,34 @@ export class Wire extends Component {
             });
             o.updateLayout();
         }
+        return o.points.map(p => p.spec());
+    }
+    spec(): any {
         return {
-            id: o.id(),
-            points: o.points.map(p => p.spec()),
-        };
+            points: this.pointsSpec(),
+            super: super.spec(),
+        } as WireSpec;
     }
 }
 
-export function removeRedundantPoints(s: WireSpec) {
+export function removeRedundantPoints(s: WirePointSpec[]): WirePointSpec[] {
     // Make sure that on every line there are 3 points.
     // Iteracte over points and add to line.
     // If only two points: add intermediate one.
     // If 4+ points: remove all but one intermediate.
-    if (s.points.length < 2) return;
-    // const specs = this.points.map(p => p.spec());
-    // console.log('update intermediate points', specs);
-    // this.points.forEach(p => p.remove());
-    // this.points = [];
+    if (s.length < 2) return s;
     let j = 1;
-    const n = s.points.length;
+    const n = s.length;
     const keep = new Array<boolean>(n);
-    // this.points.push(new WirePoint(specs[0]));
     keep[0] = true;
-    let pi = s.points[0];
+    let pi = s[0];
     while (j < n) {
-        let pj = s.points[j];
+        let pj = s[j];
         let k = j + 1;
         if (k < n) {
-            const pk = s.points[k];
-            const a1 = Math.atan2(pj.y - pi.y, pj.x - pi.x);
-            const a2 = Math.atan2(pk.y - pi.y, pk.x - pi.x);
+            const pk = s[k];
+            const a1 = Math.atan2(pj.super.xy.y - pi.super.xy.y, pj.super.xy.x - pi.super.xy.x);
+            const a2 = Math.atan2(pk.super.xy.y - pi.super.xy.y, pk.super.xy.x - pi.super.xy.x);
             if (Math.abs(a1 - a2) < 0.1) {
                 j = k;
                 continue;
@@ -224,26 +213,29 @@ export function removeRedundantPoints(s: WireSpec) {
         pi = pj;
         j++;
     }
-    const pp = s.points;
-    s.points = [];
+    const pp = s;
+    s = [];
     for (let k = 0; k < keep.length; k++) {
         if (keep[k]) {
-            s.points.push(pp[k]);
+            s.push(pp[k]);
         }
     }
+    return s
 }
 
-export function addHelperPoints(s: WireSpec) {
-    const pp: WirePointSpec[] = [];
-    for (let k = 0; k < s.points.length; k++) {
+export function addHelperPoints(s: WirePointSpec[]): WirePointSpec[] {
+    const z: WirePointSpec[] = [];
+    for (let k = 0; k < s.length; k++) {
         if (k > 0) {
-            pp.push({
-                x: (s.points[k - 1].x + s.points[k].x) / 2,
-                y: (s.points[k - 1].y + s.points[k].y) / 2,
+            z.push({
+                super: {
+                    xy: point((s[k - 1].super.xy.x + s[k].super.xy.x) / 2,
+                        (s[k - 1].super.xy.y + s[k].super.xy.y) / 2)
+                },
                 helper: true,
             });
         }
-        pp.push(s.points[k]);
+        z.push(s[k]);
     }
-    s.points = pp;
+    return z;
 }
