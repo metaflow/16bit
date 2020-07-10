@@ -31,14 +31,14 @@ export class Contact extends Component {
         return p;
     }
     setupEvents() {
-        const c = this;
+        const o = this;
         this.circle.on('mousedown', function (e) {
             console.log('mousedown on contact');
             e.cancelBubble = true;
             if (appActions.onMouseDown(e)) return;
             appActions.current(new AddWireAction({
                 typeMarker: 'AddWireAction',
-                points: [c.xy()],
+                points: [o.xy()],
             }));
         });
     }

@@ -12,10 +12,7 @@ export interface ComponentSpec {
 }
 
 export abstract class Component implements Addressable {
-    // _id = '';
     _parent: Component | null = null;
-    // _y = 0;
-    // _x = 0;
     componentSpec: ComponentSpec;
     children = new Map<string, Component>();
     shapes = new Konva.Group();

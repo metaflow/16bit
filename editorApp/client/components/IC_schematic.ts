@@ -2,6 +2,8 @@ import { Component, componentDeserializers, ComponentSpec } from "./component";
 import Konva from "konva";
 import { toScreen, scale, pointAsNumber, point } from "../stage";
 import { Contact } from "./contact";
+import { appActions } from "../action";
+import { Selectable } from "../actions/select_action";
 
 const marker = 'IntegratedCircuitSchematic';
 
@@ -27,7 +29,7 @@ export interface IntegratedCircuitSchematicSpec {
     super?: ComponentSpec;
 }
 
-export class IntegratedCircuitSchematic extends Component {
+export class IntegratedCircuitSchematic extends Component implements Selectable  {
     rect: Konva.Rect;
     name: Konva.Text;
     left_pins: string[] = [];
@@ -36,6 +38,7 @@ export class IntegratedCircuitSchematic extends Component {
     right_labels: Konva.Text[] = [];
     contacts: Contact[] = [];
     pin_lines: Konva.Line[] = [];
+    _selected: boolean = false;
 
     constructor(spec: IntegratedCircuitSchematicSpec) {
         super(spec.super);
@@ -44,6 +47,7 @@ export class IntegratedCircuitSchematic extends Component {
         this.rect = new Konva.Rect({
             stroke: 'black',
             strokeWidth: 1,
+            name: 'selectable',
         });
         this.shapes.add(this.rect);
         for (let i = 0; i < this.left_pins.length; i++) {
@@ -70,8 +74,17 @@ export class IntegratedCircuitSchematic extends Component {
         this.name = new Konva.Text({ text: spec.label, align: 'center', wrap: 'none' });
         this.shapes.add(this.name);
         this.updateLayout();
+        this.setupEvents();
     }
-
+    selectableInterface: true = true; 
+    selected(v?: boolean | undefined): boolean {
+        if (v !== undefined) {
+            this._selected = v;
+            this.mainColor(v ? 'red' : 'black');
+            this.updateLayout();
+        }
+        return this._selected;
+    }
     updateLayout() {
         super.updateLayout();
         let [x, y] = pointAsNumber(toScreen(this.xy()));
@@ -126,5 +139,23 @@ export class IntegratedCircuitSchematic extends Component {
             label: this.name.text(),
             super: super.spec(),
         } as IntegratedCircuitSchematicSpec;        
+    }
+    materialized(b?: boolean): boolean {
+        let z = super.materialized(b);
+        if (z) {
+            this.rect.attrs['address'] = this.address();
+        }
+        return z;
+    }
+    setupEvents() {
+        const o = this;
+        this.rect.on('mousedown', o.onMouseDown);
+        this.right_labels.forEach(x => x.on('mousedown', o.onMouseDown));
+        this.left_labels.forEach(x => x.on('mousedown', o.onMouseDown));
+    }
+    onMouseDown(e: Konva.KonvaEventObject<MouseEvent>) {
+        console.log('mousedown on IC');
+        e.cancelBubble = true;
+        if (appActions.onMouseDown(e)) return;
     }
 }

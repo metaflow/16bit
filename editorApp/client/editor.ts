@@ -96,4 +96,3 @@ gridAlignment(5); // TODO: make grid algnment change an action.
 appActions.load();
 defaultLayer()?.batchDraw();
 actionLayer()?.batchDraw();
-

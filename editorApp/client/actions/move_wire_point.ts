@@ -28,7 +28,7 @@ interface spec {
 interface SingleWireMove {
   address: string;
   originalPoints: WirePointSpec[];
-  affectedPointsIds: (string|undefined)[];  // TODO: or set?
+  affectedPointsIds: (string|undefined)[];
   auxWire?: Wire;
 };
 
@@ -101,7 +101,7 @@ export class MoveWirePointAction implements Action {
         address: w.address(),
         originalPoints: w.pointsSpec(),
         affectedPointsIds: [],
-        auxWire: new Wire(),  // TODO: make id optional if object is not going to be materialized and maybe make id parameter of "materialize".
+        auxWire: new Wire(),
       };
       for (const p of points) {
         if (p.parent() == w) {

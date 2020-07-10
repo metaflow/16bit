@@ -15,7 +15,7 @@
     - add IC should be in different color
     - schematic IC @done
     - add schematic IC
-    - select IC
+    - select IC @done
     - delete IC
     - move IC
     - schematic wire (intiallay copy)
@@ -35,12 +35,11 @@ add breadboard
 move breadboard (one in relation to another)
 
 scenario:
-- make schematics in one of the open editors OR draw it here
-- export / import into editor
-- pick parts and put them on the breadboard
+- draw a scrematic, with LED, ground and other
+- click on schematic parts and move them to the breadboard
+- hover on schematic / breadboard to highlight corresponding part in a different view
 - auto create wires between components (maybe only selected ones)
-- moving part will auto-move wires
-- wires can be moved
+- moving part auto-move wires
 - mark connections that does not exist / missing on schematic
-
+- assign height layers to wires, mark potential itersections between wires, show only wires of one layer
 
