@@ -52,6 +52,7 @@ export class WirePoint extends Component implements Selectable {
         this.selectionRect.on('mousedown', function (e) {
             console.log('click on wire point');
             e.cancelBubble = true;
+            if (appActions.onMouseDown(e)) return;
             if (point.selected()) {
                 const points: WirePoint[] = selectionByType(WirePoint);
                 appActions.current(new MoveWirePointAction(points, getPhysicalCursorPosition()));

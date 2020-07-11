@@ -9,12 +9,12 @@
 - add non orthogonal action (make it parameter of a stage)
 - fix start / end wire point
 - schematic
-    - toolbar to add components
+    - toolbar to add components @done
     - is it possible to make two layers and move them in relation to each other?
     - separate layer and address space for schematic
     - add IC should be in different color
     - schematic IC @done
-    - add schematic IC
+    - add schematic IC @done
     - select IC @done
     - delete IC
     - move IC

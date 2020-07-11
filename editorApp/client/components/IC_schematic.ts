@@ -4,6 +4,7 @@ import { toScreen, scale, pointAsNumber, point } from "../stage";
 import { Contact } from "./contact";
 import { appActions } from "../action";
 import { Selectable } from "../actions/select_action";
+import { MoveIcSchematicAction } from "../actions/move_ic_schematic";
 
 const marker = 'IntegratedCircuitSchematic';
 
@@ -149,13 +150,14 @@ export class IntegratedCircuitSchematic extends Component implements Selectable 
     }
     setupEvents() {
         const o = this;
-        this.rect.on('mousedown', o.onMouseDown);
-        this.right_labels.forEach(x => x.on('mousedown', o.onMouseDown));
-        this.left_labels.forEach(x => x.on('mousedown', o.onMouseDown));
-    }
-    onMouseDown(e: Konva.KonvaEventObject<MouseEvent>) {
-        console.log('mousedown on IC');
-        e.cancelBubble = true;
-        if (appActions.onMouseDown(e)) return;
+        const f = (e: Konva.KonvaEventObject<MouseEvent>) => {
+            console.log('mousedown on IC');
+            e.cancelBubble = true;
+            if (appActions.onMouseDown(e)) return;
+            appActions.current(new MoveIcSchematicAction(o));
+        };
+        this.rect.on('mousedown', f);
+        this.right_labels.forEach(x => x.on('mousedown', f));
+        this.left_labels.forEach(x => x.on('mousedown', f));
     }
 }
