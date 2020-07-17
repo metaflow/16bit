@@ -1,6 +1,6 @@
 import Konva from 'konva';
 import { Contact } from './contact';
-import { scale, toScreen, getPhysicalCursorPosition, selection, pointAsNumber, point, selectionByType } from '../stage';
+import { scale,  pointAsNumber, selectionByType, PhysicalPoint } from '../stage';
 import { newAddress, getTypedByAddress } from '../address';
 import { Selectable } from '../actions/select_action';
 import { Component, ComponentSpec } from './component';
@@ -55,9 +55,9 @@ export class WirePoint extends Component implements Selectable {
             if (appActions.onMouseDown(e)) return;
             if (point.selected()) {
                 const points: WirePoint[] = selectionByType(WirePoint);
-                appActions.current(new MoveWirePointAction(points, getPhysicalCursorPosition()));
+                appActions.current(new MoveWirePointAction(points, PhysicalPoint.cursor()));
             } else {
-                appActions.current(new MoveWirePointAction([point], getPhysicalCursorPosition()));
+                appActions.current(new MoveWirePointAction([point], PhysicalPoint.cursor()));
             }
         });
         this.shapes.add(this.selectionRect);
@@ -73,10 +73,10 @@ export class WirePoint extends Component implements Selectable {
     updateLayout() {
         super.updateLayout();
         if (this._contact != null) {
-            this.x(this._contact.x());
-            this.y(this._contact.y());
+            this.offset(this._contact.absolutePosition());
         }
-        let xy = toScreen(point(this.x() - wirePointSize / 2, this.y() - wirePointSize / 2));
+        const d = wirePointSize / 2;
+        let xy = this.absolutePosition().sub(new PhysicalPoint(d, d)).screen();
         this.selectionRect.x(xy.x);
         this.selectionRect.y(xy.y);
         this.selectionRect.width(wirePointSize * scale());
@@ -140,7 +140,7 @@ export class Wire extends Component {
         const pp: number[] = [];
         for (const p of this.points) {
             if (p.helper) continue;
-            pp.push(...pointAsNumber(toScreen(p.xy())));
+            pp.push(...pointAsNumber(p.absolutePosition().screen()));
         }
         this.line.points(pp);
         this.line.strokeWidth(wireWidth * scale());
@@ -200,8 +200,8 @@ export function removeRedundantPoints(s: WirePointSpec[]): WirePointSpec[] {
         let k = j + 1;
         if (k < n) {
             const pk = s[k];
-            const a1 = Math.atan2(pj.super.xy.y - pi.super.xy.y, pj.super.xy.x - pi.super.xy.x);
-            const a2 = Math.atan2(pk.super.xy.y - pi.super.xy.y, pk.super.xy.x - pi.super.xy.x);
+            const a1 = pj.super.offset.clone().sub(pi.super.offset).atan2();
+            const a2 = pk.super.offset.clone().sub(pi.super.offset).atan2();
             if (Math.abs(a1 - a2) < 0.1) {
                 j = k;
                 continue;
@@ -227,8 +227,7 @@ export function addHelperPoints(s: WirePointSpec[]): WirePointSpec[] {
         if (k > 0) {
             z.push({
                 super: {
-                    xy: point((s[k - 1].super.xy.x + s[k].super.xy.x) / 2,
-                        (s[k - 1].super.xy.y + s[k].super.xy.y) / 2)
+                    offset: s[k-1].super.offset.clone().add(s[k].super.offset).s(0.5)
                 },
                 helper: true,
             });

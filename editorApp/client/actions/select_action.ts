@@ -1,6 +1,6 @@
 import { Action, actionDeserializers } from "../action";
 import Konva from "konva";
-import { stage, getCursorPosition, actionLayer, select, selectionAddresses, clearSelection } from "../stage";
+import { stage, actionLayer, select, selectionAddresses, clearSelection, ScreenPoint } from "../stage";
 import { getByAddress } from "../address";
 
 const marker = 'SelectAction';
@@ -41,10 +41,9 @@ export class SelectAction implements Action {
     }
     mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean {
         if (this.rect == null) return false;
-        let pos = getCursorPosition();
+        let pos = ScreenPoint.cursor();
         this.rect.width(pos.x - this.rect.x());
         this.rect.height(pos.y - this.rect.y());
-        let action = this;
         const r = this.rect.getClientRect(null);
         var shapes = stage()?.find('.selectable');
         if (shapes == null) return true;
@@ -61,7 +60,7 @@ export class SelectAction implements Action {
         return false;
     }
     mousedown(event: Konva.KonvaEventObject<MouseEvent>): boolean {
-        let pos = getCursorPosition();
+        let pos = ScreenPoint.cursor();
         this.rect = new Konva.Rect({
             x: pos.x,
             y: pos.y,
@@ -72,10 +71,9 @@ export class SelectAction implements Action {
     }
     mouseup(event: Konva.KonvaEventObject<MouseEvent>): boolean {
         if (this.rect == null) return false;
-        let pos = getCursorPosition();
+        let pos = ScreenPoint.cursor();
         this.rect.width(pos.x - this.rect.x());
         this.rect.height(pos.y - this.rect.y());
-
         this.rect.remove();
         return true;
     }

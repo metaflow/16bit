@@ -1,5 +1,5 @@
 import { IntegratedCircuitSchematic, IntegratedCircuitSchematicSpec } from "./IC_schematic";
-import { componentDeserializers, ComponentSpec } from "./component";
+import { componentDeserializers } from "./component";
 
 const marker = 'ic74x245';
 

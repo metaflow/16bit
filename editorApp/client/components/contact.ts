@@ -38,15 +38,14 @@ export class Contact extends Component {
             if (appActions.onMouseDown(e)) return;
             appActions.current(new AddWireAction({
                 typeMarker: 'AddWireAction',
-                points: [o.xy()],
+                points: [o.offset().plain()],
             }));
         });
     }
     updateLayout(): void {
         super.updateLayout();
         this.circle.fill(this.mainColor());
-        this.circle.x(this.x() * scale());
-        this.circle.y(this.y() * scale());
+        this.circle.position(this.absolutePosition().screen());
         this.circle.radius(radius * scale());
     }
 }

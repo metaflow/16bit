@@ -1,6 +1,6 @@
 import { Component, componentDeserializers, ComponentSpec } from "./component";
 import Konva from "konva";
-import { toScreen, scale, pointAsNumber, point } from "../stage";
+import { scale, pointAsNumber, PhysicalPoint } from "../stage";
 import { Contact } from "./contact";
 import { appActions } from "../action";
 import { Selectable } from "../actions/select_action";
@@ -57,7 +57,7 @@ export class IntegratedCircuitSchematic extends Component implements Selectable 
             this.left_labels.push(t);
             this.shapes.add(t);
             if (s === "") continue;
-            const c = new Contact({ id: s, xy: point(- pin_length, (i + 1) * contact_height) });
+            const c = new Contact({ id: s, offset: new PhysicalPoint(- pin_length, (i + 1) * contact_height) });
             this.contacts.push(this.addChild(c));
             this.pin_lines.push(new Konva.Line({ points: [0, 0, 0, 0], stroke: 'black' }));
         }
@@ -67,7 +67,7 @@ export class IntegratedCircuitSchematic extends Component implements Selectable 
             this.right_labels.push(t);
             this.shapes.add(t);
             if (s === "") continue;
-            const c = new Contact({ id: s, xy: point(width + pin_length, (i + 1) * contact_height) });
+            const c = new Contact({ id: s, offset: new PhysicalPoint(width + pin_length, (i + 1) * contact_height) });
             this.contacts.push(this.addChild(c));
             this.pin_lines.push(new Konva.Line({ points: [0, 0, 0, 0], stroke: 'black' }));
         }
@@ -88,7 +88,7 @@ export class IntegratedCircuitSchematic extends Component implements Selectable 
     }
     updateLayout() {
         super.updateLayout();
-        let [x, y] = pointAsNumber(toScreen(this.xy()));
+        let [x, y] = pointAsNumber(this.absolutePosition().screen());
         this.rect.x(x);
         this.rect.y(y);
         const pins = Math.max(this.left_pins.length, this.right_pins.length);
@@ -111,8 +111,8 @@ export class IntegratedCircuitSchematic extends Component implements Selectable 
             this.left_labels[i].x(x + gap * scale());
             this.left_labels[i].y(y + ((i + 1) * contact_height - 0.5 * label_font_size) * scale());
             if (this.left_pins[i] === "") continue;
-            const c = this.contacts[j];
-            this.pin_lines[j].points([c.x() * scale(), c.y() * scale(), this.rect.x(), c.y() * scale()]);
+            const cxy = this.contacts[j].absolutePosition().screen();
+            this.pin_lines[j].points([cxy.x, cxy.y, this.rect.x(), cxy.y]);
             this.pin_lines[j].stroke(this.mainColor());
             j++;
         }
@@ -121,8 +121,8 @@ export class IntegratedCircuitSchematic extends Component implements Selectable 
             this.right_labels[i].x(x + (width - gap - contact_label_width) * scale());
             this.right_labels[i].y(y + ((i + 1) * contact_height - 0.5 * label_font_size) * scale());
             if (this.right_pins[i] === "") continue;
-            const c = this.contacts[j];
-            this.pin_lines[j].points([c.x() * scale(), c.y() * scale(), this.rect.x() + this.rect.width(), c.y() * scale()]);
+            const cxy = this.contacts[j].absolutePosition().screen();
+            this.pin_lines[j].points([cxy.x, cxy.y, this.rect.x() + this.rect.width(), cxy.y]);
             this.pin_lines[j].stroke(this.mainColor());
             j++;
         }

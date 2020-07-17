@@ -1,14 +1,14 @@
 import Konva from 'konva';
-import { Wire, removeRedundantPoints, addHelperPoints } from '../components/wire';
+import { Wire, removeRedundantPoints, addHelperPoints, WirePointSpec } from '../components/wire';
 import { Action, actionDeserializers } from '../action';
-import { toScreen, actionLayer, defaultLayer, getPhysicalCursorPosition, pointAsNumber, gridAlignment, alignPoint, scale, point, Point } from '../stage';
+import { actionLayer, defaultLayer, pointAsNumber, gridAlignment, scale, Point, PhysicalPoint } from '../stage';
 import { newAddress } from '../address';
 
 const marker = 'AddWireAction';
 
 interface AddWireActionSpec {
     typeMarker: typeof marker;
-    points: Point[];
+    points: Konva.Vector2d[];
 };
 
 export class AddWireAction implements Action {
@@ -16,7 +16,7 @@ export class AddWireAction implements Action {
     line: Konva.Line;
     startMarker: Konva.Circle;
     endMarker: Konva.Circle;
-    points: Point[] = [];
+    points: PhysicalPoint[] = [];
 
     constructor(spec?: AddWireActionSpec) {
         this.line = new Konva.Line({
@@ -35,12 +35,11 @@ export class AddWireAction implements Action {
             fill: 'red',
         })
         if (spec != null) {
-            this.points = spec.points;
-            if (spec.points.length > 0) {
-                this.startMarker.position(toScreen(spec.points[0]));
-                this.endMarker.position(toScreen(spec.points[spec.points.length - 1]));
+            this.points = spec.points.map(p => new PhysicalPoint(p.x, p.y));
+            if (this.points.length > 0) {
+                this.startMarker.position(this.points[0].screen());
+                this.endMarker.position(this.points[spec.points.length - 1].screen());
             }
-            this.updateLayout();
         }
         actionLayer()?.add(this.line);
         actionLayer()?.add(this.startMarker);
@@ -52,11 +51,11 @@ export class AddWireAction implements Action {
     apply() {
         let s = removeRedundantPoints(this.points.map(p => ({
             helper: false,
-            super: { xy: p },
-        })));
+            super: { offset: p },
+        } as WirePointSpec)));
         s = addHelperPoints(s);
         this.wire = new Wire({
-            super: { id: newAddress(), xy: point(0, 0) },
+            super: { id: newAddress(), offset: new PhysicalPoint() },
             points: s,
         });
         this.wire.updateLayout();
@@ -76,9 +75,10 @@ export class AddWireAction implements Action {
     }
 
     mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean {
-        this.endMarker.position(toScreen(this.orthogonalCursor()));
+        this.endMarker.position(this.orthogonalCursor().screen());
+
         if (this.points.length == 0) {
-            this.startMarker.position(toScreen(this.orthogonalCursor()));
+            this.startMarker.position(this.orthogonalCursor().screen());
             return false;
         }
         this.updateLayout();
@@ -87,22 +87,21 @@ export class AddWireAction implements Action {
     updateLayout() {
         const pp: number[] = [];
         for (const xy of this.points) {
-            pp.push(...pointAsNumber(toScreen(xy)));
+            pp.push(...pointAsNumber(xy.screen()));
         }
         const xy = this.orthogonalCursor();
-        pp.push(...pointAsNumber(toScreen(xy)));
+        pp.push(...pointAsNumber(xy.screen()));
         this.line.points(pp);
     }
-    orthogonalCursor() {
-        const xy = alignPoint(getPhysicalCursorPosition(), gridAlignment());
+    orthogonalCursor(): PhysicalPoint {
+        const xy = PhysicalPoint.cursor().alignToGrid();
         if (this.points.length == 0) return xy;
         const last = this.points[this.points.length - 1];
-        const dx = Math.abs(xy.x - last.x);
-        const dy = Math.abs(xy.y - last.y);
-        if (dx < dy) {
-            xy.x = last.x;
+        const d = xy.clone().sub(last);
+        if (Math.abs(d.getX()) < Math.abs(d.getY())) {
+            xy.setX(last.getX());
         } else {
-            xy.y = last.y;
+            xy.setY(last.getY());
         }
         return xy;
     }
@@ -119,7 +118,7 @@ export class AddWireAction implements Action {
     serialize(): AddWireActionSpec {
         return {
             typeMarker: marker,
-            points: this.points,
+            points: this.points.map(p => ({x: p.getX(), y: p.getY()} as Konva.Vector2d)),
         };
     }
 }

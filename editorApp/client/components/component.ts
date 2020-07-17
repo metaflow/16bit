@@ -1,13 +1,12 @@
 import { Addressable, address, addAddressRoot, removeAddressRoot, newAddress } from "../address";
 import Konva from "konva";
-import { Selectable } from "../actions/select_action";
-import { stage, select, Point, point } from "../stage";
+import { select, PhysicalPoint } from "../stage";
 import assertExists from "ts-assert-exists";
 
 export const componentDeserializers: { (data: any): (Component | null) }[] = [];
 
 export interface ComponentSpec {
-    xy: Point;
+    offset: PhysicalPoint;
     id?: string;
 }
 
@@ -21,7 +20,7 @@ export abstract class Component implements Addressable {
     _materialized = false; // If this component really "exists" and accessabe from the address root.
     constructor(spec?: ComponentSpec) {
         if (spec == undefined) {
-            spec = { xy: point(0, 0) };
+            spec = { offset: new PhysicalPoint() };
         }
         this.componentSpec = spec;
     }
@@ -91,26 +90,15 @@ export abstract class Component implements Addressable {
         }
         return this.componentSpec.id;
     }
-    x(newX?: number): number {
-        if (newX !== undefined) {
-            this.componentSpec.xy.x = newX;
-        }
-        if (this._parent != null) return this._parent.x() + this.componentSpec.xy.x;
-        return this.componentSpec.xy.x;
-    }
-    y(newY?: number): number {
-        if (newY !== undefined) {
-            this.componentSpec.xy.y = newY;
-        }
-        if (this._parent != null) return this._parent.y() + this.componentSpec.xy.y;
-        return this.componentSpec.xy.y;
-    }
-    xy(v?: Point): Point {
+    offset(v?: PhysicalPoint): PhysicalPoint {
         if (v != undefined) {
-            this.x(v.x);
-            this.y(v.y);
+            this.componentSpec.offset = v.clone();
         }
-        return point(this.x(), this.y());
+        return this.componentSpec.offset.clone();
+    }
+    absolutePosition(): PhysicalPoint {
+        if (this._parent != null) return this._parent.absolutePosition().add(this.offset());
+        return this.offset();
     }
     show(layer: Konva.Layer | null) {
         this.shapes.moveTo(layer);

@@ -1,9 +1,8 @@
 import { Component, ComponentSpec } from "./component";
 import Konva from "konva";
-import { toScreen, scale, pointAsNumber, point } from "../stage";
+import { scale, pointAsNumber, PhysicalPoint } from "../stage";
 import { newAddress } from "../address";
 import { Contact } from "./contact";
-import { IntegratedCircuitSchematic } from "./IC_schematic";
 
 const gap = 1;
 const height = 2.54 * 2;
@@ -41,11 +40,11 @@ export class IntegratedCircuit extends Component {
         }
         const w = Math.floor((this.pins.length + 1) / 2);
         for (let i = 0; i < w; i++) {
-            const c = new Contact({ id: newAddress(this), xy: point((i + 0.5) * contact_width + gap, height + pin_length)});
+            const c = new Contact({ id: newAddress(this), offset: new PhysicalPoint((i + 0.5) * contact_width + gap, height + pin_length)});
             this.contacts.push(this.addChild(c));
         }
         for (let i = w; i < this.pins.length; i++) {
-            let c = new Contact({id: newAddress(this), xy: point((this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length)});
+            let c = new Contact({id: newAddress(this), offset: new PhysicalPoint((this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length)});
             this.addChild(c);
             this.contacts.push(c);
         }
@@ -58,7 +57,7 @@ export class IntegratedCircuit extends Component {
 
     updateLayout() {
         super.updateLayout();
-        let [x, y] = pointAsNumber(toScreen(this.xy()));
+        let [x, y] = pointAsNumber(this.absolutePosition().screen());
         const w = Math.floor((this.pins.length + 1) / 2);
         this.rect.x(x);
         this.rect.y(y);

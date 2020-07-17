@@ -7,6 +7,7 @@ import { SelectAction } from './actions/select_action';
 import { ic74x245 } from './components/74x245';
 import { PlaceComponentAction } from './actions/add_ic_action';
 import { AddWireAction } from './actions/add_wire';
+import * as Vec2D from 'vector2d';
 
 (window as any).add245 = function () {
   console.log('add 245');
@@ -96,3 +97,6 @@ gridAlignment(5); // TODO: make grid algnment change an action.
 appActions.load();
 defaultLayer()?.batchDraw();
 actionLayer()?.batchDraw();
+
+const v = new Vec2D.Vector(1.1, 2.2);
+console.log(v);

@@ -1,7 +1,7 @@
 import { IntegratedCircuitSchematic } from "../components/IC_schematic";
 import { Action, actionDeserializers } from "../action";
 import { KonvaEventObject } from "konva/types/Node";
-import { Point, getPhysicalCursorPosition, actionLayer, pointSub, alignPoint, gridAlignment, point, defaultLayer } from "../stage";
+import { Point, actionLayer, gridAlignment, defaultLayer, ScreenPoint, PhysicalPoint } from "../stage";
 import { getTypedByAddress } from "../address";
 import assertExists from "ts-assert-exists";
 import { deserializeComponent, Component } from "../components/component";
@@ -19,49 +19,46 @@ actionDeserializers.push(function (data: any): Action | null {
 
 interface MoveIcSchematicActionSpec {
   typeMarker: 'MoveIcSchematicAction';
-  from: Point;
-  to: Point;
+  from: PhysicalPoint;
+  to: PhysicalPoint;
   ic_address: string;
 }
 
+// TODO: maybe just "move component"?
 export class MoveIcSchematicAction implements Action {
-    from: Point;
-    to: Point;
-    originalPosition: Point;
+    from: PhysicalPoint;
+    to: PhysicalPoint;
+    originalOffset: PhysicalPoint;
     ic: IntegratedCircuitSchematic;
     actionIc: Component;
-    constructor(s: IntegratedCircuitSchematic, from?: Point) {
+    constructor(s: IntegratedCircuitSchematic, from?: PhysicalPoint) {
         console.log('move ic', s);
-        if (from == undefined) from = getPhysicalCursorPosition();
+        if (from == undefined) from = PhysicalPoint.cursor();
         this.from = from;
         this.to = from;
         this.ic = s;
-        this.originalPosition = this.ic.xy();
+        this.originalOffset = this.ic.offset();
         this.actionIc = assertExists(deserializeComponent(s.spec()));
         this.actionIc.mainColor('blue');
         this.ic.hide();
         this.actionIc.show(actionLayer());
     }
     apply(): void {
-        const d = pointSub(this.to, this.from);
-        this.ic.xy(alignPoint(point(this.originalPosition.x + d.x,
-            this.originalPosition.y + d.y), gridAlignment())); // TODO: point sum.
+        const d = this.to.clone().sub(this.from);
+        this.ic.offset(this.originalOffset.clone().add(d).alignToGrid());
         this.ic.updateLayout();
         this.ic.show(defaultLayer());
         this.actionIc.hide();
     }
     undo(): void {
-        this.ic.xy(this.originalPosition);
+        this.ic.offset(this.originalOffset);
         this.ic.updateLayout();
     }
     mousemove(event: KonvaEventObject<MouseEvent>): boolean {
-        this.to = getPhysicalCursorPosition();
-        const d = pointSub(this.to, this.from); // TODO: make it easier to access point operations.
-        let xy = point(this.originalPosition.x, this.originalPosition.y);
-        xy.x += d.x;
-        xy.y += d.y;
-        xy = alignPoint(xy, gridAlignment());
-        this.actionIc.xy(xy);
+        this.to = PhysicalPoint.cursor();
+        const d = this.to.clone().sub(this.from);
+        let xy = this.originalOffset.clone().add(d).alignToGrid();
+        this.actionIc.offset(xy);
         this.actionIc.updateLayout();
         return false;
     }
@@ -69,7 +66,7 @@ export class MoveIcSchematicAction implements Action {
 return false;
     }
     mouseup(event: KonvaEventObject<MouseEvent>): boolean {
-        this.to = getPhysicalCursorPosition();
+        this.to = PhysicalPoint.cursor();
         return true;
     }
     cancel(): void {
@@ -78,7 +75,7 @@ return false;
     }
     serialize() {
         return {
-
+// TODO: implement
         } as MoveIcSchematicActionSpec;
     }
 }
