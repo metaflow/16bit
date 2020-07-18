@@ -7,10 +7,9 @@ import { Component, ComponentSpec } from './component';
 import { appActions } from '../action';
 import { MoveWirePointAction } from '../actions/move_wire_point';
 
-export interface WirePointSpec {
+export interface WirePointSpec extends ComponentSpec {
     contact?: string | null;
     helper: boolean;
-    super: ComponentSpec;
 }
 
 const wirePointSize = 3;
@@ -41,7 +40,7 @@ export class WirePoint extends Component implements Selectable {
     _selected: boolean = false;
     helper: boolean;
     constructor(spec: WirePointSpec) {
-        super(spec.super);
+        super(spec);
         if (spec.contact != null) this._contact = getTypedByAddress(Contact, spec.contact);
         this.helper = spec.helper;
         this.selectionRect = new Konva.Rect({
@@ -105,23 +104,23 @@ export class WirePoint extends Component implements Selectable {
             address: this.materialized() ? this.address() : undefined,
             contact: this.contact()?.address(),
             helper: this.helper,
-            super: super.spec(),
-        }
+            offset: this._offset.plain(),
+            id: this._id,
+        } as WirePointSpec;
     }
 }
 
 const wireWidth = 0.5;
 
-export interface WireSpec {
+export interface WireSpec extends ComponentSpec {
     points: WirePointSpec[];
-    super?: ComponentSpec;
 }
 
 export class Wire extends Component {
     line: Konva.Line;
     points: WirePoint[] = [];
     constructor(spec?: WireSpec) {
-        super(spec?.super);
+        super(spec);
         console.log('wire()', spec);
         this.line = new Konva.Line({
             points: [],
@@ -159,13 +158,13 @@ export class Wire extends Component {
             o.points.forEach(p => p.remove());
             // Create points in two passes: first with known IDs, then new ones.
             let pp = v.map(x => {
-                if (x.super.id == undefined) return null;
+                if (x.id == undefined) return null;
                 return o.addChild(new WirePoint(x));
             });
             for (let i = 0; i < v.length; i++) {
                 const x = v[i];
-                if (x.super.id !== undefined) continue;
-                x.super.id = newAddress(o);
+                if (x.id !== undefined) continue;
+                x.id = newAddress(o);
                 pp[i] = o.addChild(new WirePoint(x));
             }
             o.points = [];
@@ -179,14 +178,15 @@ export class Wire extends Component {
     spec(): any {
         return {
             points: this.pointsSpec(),
-            super: super.spec(),
+            offset: this._offset.plain(),
+            id: this._id,
         } as WireSpec;
     }
 }
 
 export function removeRedundantPoints(s: WirePointSpec[]): WirePointSpec[] {
     // Make sure that on every line there are 3 points.
-    // Iteracte over points and add to line.
+    // Iterate over points and add to line.
     // If only two points: add intermediate one.
     // If 4+ points: remove all but one intermediate.
     if (s.length < 2) return s;
@@ -200,8 +200,8 @@ export function removeRedundantPoints(s: WirePointSpec[]): WirePointSpec[] {
         let k = j + 1;
         if (k < n) {
             const pk = s[k];
-            const a1 = pj.super.offset.clone().sub(pi.super.offset).atan2();
-            const a2 = pk.super.offset.clone().sub(pi.super.offset).atan2();
+            const a1 = new PhysicalPoint(pj.offset).sub(new PhysicalPoint(pi.offset)).atan2();
+            const a2 = new PhysicalPoint(pk.offset).sub(new PhysicalPoint(pi.offset)).atan2();
             if (Math.abs(a1 - a2) < 0.1) {
                 j = k;
                 continue;
@@ -226,9 +226,7 @@ export function addHelperPoints(s: WirePointSpec[]): WirePointSpec[] {
     for (let k = 0; k < s.length; k++) {
         if (k > 0) {
             z.push({
-                super: {
-                    offset: s[k-1].super.offset.clone().add(s[k].super.offset).s(0.5)
-                },
+                offset: new PhysicalPoint(s[k-1].offset).add(new PhysicalPoint(s[k].offset)).s(0.5).plain(),
                 helper: true,
             });
         }

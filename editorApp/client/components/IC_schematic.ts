@@ -57,7 +57,10 @@ export class IntegratedCircuitSchematic extends Component implements Selectable 
             this.left_labels.push(t);
             this.shapes.add(t);
             if (s === "") continue;
-            const c = new Contact({ id: s, offset: new PhysicalPoint(- pin_length, (i + 1) * contact_height) });
+            const c = new Contact({ 
+                id: s, 
+                offset: new PhysicalPoint(- pin_length, (i + 1) * contact_height).plain(),
+            });
             this.contacts.push(this.addChild(c));
             this.pin_lines.push(new Konva.Line({ points: [0, 0, 0, 0], stroke: 'black' }));
         }
@@ -67,7 +70,10 @@ export class IntegratedCircuitSchematic extends Component implements Selectable 
             this.right_labels.push(t);
             this.shapes.add(t);
             if (s === "") continue;
-            const c = new Contact({ id: s, offset: new PhysicalPoint(width + pin_length, (i + 1) * contact_height) });
+            const c = new Contact({ 
+                id: s, 
+                offset: new PhysicalPoint(width + pin_length, (i + 1) * contact_height).plain()
+            });
             this.contacts.push(this.addChild(c));
             this.pin_lines.push(new Konva.Line({ points: [0, 0, 0, 0], stroke: 'black' }));
         }
@@ -112,7 +118,8 @@ export class IntegratedCircuitSchematic extends Component implements Selectable 
             this.left_labels[i].y(y + ((i + 1) * contact_height - 0.5 * label_font_size) * scale());
             if (this.left_pins[i] === "") continue;
             const cxy = this.contacts[j].absolutePosition().screen();
-            this.pin_lines[j].points([cxy.x, cxy.y, this.rect.x(), cxy.y]);
+            cxy.setX(cxy.getX());
+            this.pin_lines[j].points([cxy.x, cxy.y, x, cxy.y]);
             this.pin_lines[j].stroke(this.mainColor());
             j++;
         }

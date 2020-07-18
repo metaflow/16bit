@@ -38,7 +38,7 @@ export class Contact extends Component {
             if (appActions.onMouseDown(e)) return;
             appActions.current(new AddWireAction({
                 typeMarker: 'AddWireAction',
-                points: [o.offset().plain()],
+                points: [o.absolutePosition().plain()],
             }));
         });
     }

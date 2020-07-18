@@ -1,7 +1,7 @@
 import Konva from 'konva';
 import { Wire, removeRedundantPoints, addHelperPoints, WirePointSpec } from '../components/wire';
 import { Action, actionDeserializers } from '../action';
-import { actionLayer, defaultLayer, pointAsNumber, gridAlignment, scale, Point, PhysicalPoint } from '../stage';
+import { actionLayer, defaultLayer, pointAsNumber, scale, PhysicalPoint, PlainPoint, closesetContact } from '../stage';
 import { newAddress } from '../address';
 
 const marker = 'AddWireAction';
@@ -49,19 +49,29 @@ export class AddWireAction implements Action {
         return false;
     }
     apply() {
-        let s = removeRedundantPoints(this.points.map(p => ({
-            helper: false,
-            super: { offset: p },
-        } as WirePointSpec)));
-        s = addHelperPoints(s);
+        let specs: WirePointSpec[] = [];
+        for (const p of this.points) {
+            let s: WirePointSpec = {
+                helper: false,
+                offset: p.plain(),
+            };
+            const c = closesetContact(p);
+            if (c != null && c.absolutePosition().distance(p) < 0.1) {
+                s.contact = c.address();
+            }
+            specs.push(s);
+        }
+        specs = removeRedundantPoints(specs);
+        specs = addHelperPoints(specs);
         this.wire = new Wire({
-            super: { id: newAddress(), offset: new PhysicalPoint() },
-            points: s,
+            id: newAddress(),
+            offset: new PlainPoint(),
+            points: specs,
         });
         this.wire.updateLayout();
         this.wire.materialized(true);
         this.wire.show(defaultLayer());
-        this.removeHelpers();        
+        this.removeHelpers();
     }
     removeHelpers() {
         this.line.remove();
@@ -73,10 +83,8 @@ export class AddWireAction implements Action {
         this.wire.materialized(false);
         this.wire.hide();
     }
-
     mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean {
         this.endMarker.position(this.orthogonalCursor().screen());
-
         if (this.points.length == 0) {
             this.startMarker.position(this.orthogonalCursor().screen());
             return false;
@@ -110,7 +118,9 @@ export class AddWireAction implements Action {
         const xy = this.orthogonalCursor();
         console.log(event);
         this.points.push(xy);
-        return false;
+        const c = closesetContact(xy);
+        // Complete action if clicked on contact.
+        return (this.points.length >=2 && c != null && c.absolutePosition().distance(xy) < 0.1);
     }
     cancel(): void {
         this.removeHelpers();
@@ -118,7 +128,7 @@ export class AddWireAction implements Action {
     serialize(): AddWireActionSpec {
         return {
             typeMarker: marker,
-            points: this.points.map(p => ({x: p.getX(), y: p.getY()} as Konva.Vector2d)),
+            points: this.points.map(p => ({ x: p.getX(), y: p.getY() } as Konva.Vector2d)),
         };
     }
 }

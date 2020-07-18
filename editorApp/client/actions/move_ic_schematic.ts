@@ -1,7 +1,7 @@
 import { IntegratedCircuitSchematic } from "../components/IC_schematic";
 import { Action, actionDeserializers } from "../action";
 import { KonvaEventObject } from "konva/types/Node";
-import { Point, actionLayer, gridAlignment, defaultLayer, ScreenPoint, PhysicalPoint } from "../stage";
+import { actionLayer, defaultLayer, PhysicalPoint } from "../stage";
 import { getTypedByAddress } from "../address";
 import assertExists from "ts-assert-exists";
 import { deserializeComponent, Component } from "../components/component";

@@ -1,28 +1,29 @@
 import { Addressable, address, addAddressRoot, removeAddressRoot, newAddress } from "../address";
 import Konva from "konva";
-import { select, PhysicalPoint } from "../stage";
+import { select, PhysicalPoint, PlainPoint } from "../stage";
 import assertExists from "ts-assert-exists";
 
 export const componentDeserializers: { (data: any): (Component | null) }[] = [];
 
 export interface ComponentSpec {
-    offset: PhysicalPoint;
+    offset: PlainPoint;
     id?: string;
 }
 
 export abstract class Component implements Addressable {
     _parent: Component | null = null;
-    componentSpec: ComponentSpec;
     children = new Map<string, Component>();
     shapes = new Konva.Group();
     _mainColor = 'black';
     typeMarker: string = 'Component';
+    _offset = new PhysicalPoint();
+    _id: string|undefined;
     _materialized = false; // If this component really "exists" and accessabe from the address root.
     constructor(spec?: ComponentSpec) {
-        if (spec == undefined) {
-            spec = { offset: new PhysicalPoint() };
+        if (spec != undefined) {
+            this._offset = new PhysicalPoint(spec.offset);
+            this._id = spec.id;
         }
-        this.componentSpec = spec;
     }
     materialized(b?: boolean): boolean {
         if (b === undefined) return this._materialized;
@@ -86,15 +87,15 @@ export abstract class Component implements Addressable {
     }
     id(v?: string): string | undefined {
         if (v != undefined) {
-            this.componentSpec.id = v;
+            this._id = v;
         }
-        return this.componentSpec.id;
+        return this._id;
     }
     offset(v?: PhysicalPoint): PhysicalPoint {
         if (v != undefined) {
-            this.componentSpec.offset = v.clone();
+            this._offset = v.clone();
         }
-        return this.componentSpec.offset.clone();
+        return this._offset.clone();
     }
     absolutePosition(): PhysicalPoint {
         if (this._parent != null) return this._parent.absolutePosition().add(this.offset());
@@ -130,7 +131,10 @@ export abstract class Component implements Addressable {
         return this._mainColor;
     }
     spec(): any {
-        return this.componentSpec;
+        return {
+            id: this._id,
+            offset: this._offset.plain(),
+        } as ComponentSpec;
     }
 }
 

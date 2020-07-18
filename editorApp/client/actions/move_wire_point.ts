@@ -1,6 +1,6 @@
 import { Action, actionDeserializers } from '../action';
 import Konva from 'konva';
-import { actionLayer, defaultLayer, selectionAddresses, Point, gridAlignment, PhysicalPoint } from '../stage';
+import { actionLayer, defaultLayer, selectionAddresses, Point, gridAlignment, PhysicalPoint, PlainPoint } from '../stage';
 import { Wire, WirePoint, WirePointSpec, removeRedundantPoints, addHelperPoints } from '../components/wire';
 import { getByAddress, copy } from '../address';
 import assertExists from 'ts-assert-exists';
@@ -18,8 +18,8 @@ actionDeserializers.push(function (data: any): Action | null {
 
 interface spec {
   points: string[];
-  from: Point;
-  to: Point;
+  from: PlainPoint;
+  to: PlainPoint;
   states: SingleWireMove[];
   selection: string[];
 }
@@ -39,21 +39,18 @@ function moveSingleWire(dxy: PhysicalPoint, s: SingleWireMove): WirePointSpec[] 
   const nextVertical: boolean[] = [];
   const nextHorizontal: boolean[] = [];
   for (const p of s.originalPoints) {
-    const a = s.affectedPointsIds.indexOf(assertExists(p.super.id)) != -1;
+    const a = s.affectedPointsIds.indexOf(assertExists(p.id)) != -1;
     if (p.helper && !a) continue;
     affected.push(a);
-    z.push({
-      helper: p.helper,
-      super: copy(p.super),
-    });
+    z.push(copy(p));
   }
   for (let i = 0; i < z.length; i++) {
     if (i + 1 < z.length) {
-      nextVertical.push(z[i].super.offset.getX() == z[i + 1].super.offset.getX());
-      nextHorizontal.push(z[i].super.offset.getY() == z[i + 1].super.offset.getY());
+      nextVertical.push(z[i].offset.x == z[i + 1].offset.x);
+      nextHorizontal.push(z[i].offset.x == z[i + 1].offset.y);
     }
     if (affected[i]) {
-      z[i].super.offset.add(dxy).alignToGrid();
+      z[i].offset = new PhysicalPoint(z[i].offset).add(dxy).alignToGrid().plain();
     }
   }
   for (let i = 0; i < z.length; i++) {
@@ -61,18 +58,18 @@ function moveSingleWire(dxy: PhysicalPoint, s: SingleWireMove): WirePointSpec[] 
     if (!affected[i] || p.helper) continue;
     if (i > 0 && !affected[i - 1]) {
       if (nextVertical[i - 1]) {
-        z[i - 1].super.offset.setX(p.super.offset.getX());
+        z[i - 1].offset.x = p.offset.x;
       }
       if (nextHorizontal[i - 1]) {
-        z[i - 1].super.offset.setY(p.super.offset.getY());
+        z[i - 1].offset.y = p.offset.y;
       }
     }
     if (i + 1 < z.length) {
       if (nextVertical[i]) {
-        z[i + 1].super.offset.setX(p.super.offset.getX());
+        z[i + 1].offset.x = p.offset.x;
       }
       if (nextHorizontal[i]) {
-        z[i + 1].super.offset.setY(p.super.offset.getY());
+        z[i + 1].offset.y = p.offset.y;
       }
     }
   }
@@ -120,8 +117,8 @@ export class MoveWirePointAction implements Action {
   serialize(): any {
     const z: spec = {
       points: this.affectedPointsAddresses,
-      from: this.from,
-      to: this.to,
+      from: this.from.plain(),
+      to: this.to.plain(),
       states: this.states,
       selection: this.selection,
     };

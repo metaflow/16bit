@@ -9,7 +9,7 @@ import { typeGuard } from './utils';
 let _stage: Konva.Stage | null = null;
 let _gridAlignment: number | null = null;
 
-class PlainPoint {
+export class PlainPoint {
     x: number = 0;
     y: number = 0;
 };
@@ -26,12 +26,17 @@ export abstract class Point {
             this.setY(v._y);
             return;
         }
-        if (v instanceof PlainPoint) {
-            this.setX(v.x);
-            this.setY(v.y);
+        const a = v as any;
+        if (a.x != null && a.y != null) {
+            this.setX(a.x);
+            this.setY(a.y);
             return;
         }
-        this.setX(v);
+        if (typeof v === 'number') {
+            this.setX(v);
+        } else {
+            console.error(v, 'is not a valid init value for point');
+        }
         if (y == undefined) y = 0;
         this.setY(y);
     }
@@ -85,8 +90,13 @@ export abstract class Point {
 };
 
 export class ScreenPoint extends Point implements Konva.Vector2d {
-    x: number = 0;
-    y: number = 0;
+    x: number;
+    y: number;
+    constructor(v?: number | Point | PlainPoint, y?: number) {
+        super(v, y);
+        this.x = this._x;
+        this.y = this._y;
+    }
     static cursor(): ScreenPoint {
         let pos = stage()?.getPointerPosition()
         if (pos == null) pos = { x: 0, y: 0 };
@@ -105,8 +115,10 @@ export class ScreenPoint extends Point implements Konva.Vector2d {
     }
 }
 
-// TODO: make PhysicalPoint not contain x, y so that Konva objects cant take it
 export class PhysicalPoint extends Point {
+    constructor(v?: number | Point | PlainPoint, y?: number) {
+        super(v, y);
+    }
     screen(): ScreenPoint {
         return new ScreenPoint(this.clone().s(scale()));
     }
@@ -132,19 +144,9 @@ export function scale(): number {
     return 4;
 }
 
-
-// export function point(x?: number, y?: number): Point {
-//     if (x == undefined || y == undefined) return point(0, 0);
-//     return new Point(x, y);
-// }
-
 export function pointAsNumber(xy: Point): [number, number] { // TODO: move to Point
     return [xy._x, xy._y];
 }
-
-// export function pointSub(a: Point, b: Point): Point {
-//     return point(a.x - b.x, a.y - b.y);
-// }
 
 const contacts = new Map<string, Contact>();
 export function addContact(c: Contact) {

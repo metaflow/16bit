@@ -11,7 +11,7 @@ const pin_length = 2.54 / 2;
 const label_font_size = 2.5;
 const arc_r = 1;
 
-interface IntegratedCircuitSpec { 
+interface IntegratedCircuitSpec {
     pins: string[];
     label: string;
     super: ComponentSpec;
@@ -40,11 +40,17 @@ export class IntegratedCircuit extends Component {
         }
         const w = Math.floor((this.pins.length + 1) / 2);
         for (let i = 0; i < w; i++) {
-            const c = new Contact({ id: newAddress(this), offset: new PhysicalPoint((i + 0.5) * contact_width + gap, height + pin_length)});
+            const c = new Contact({
+                id: newAddress(this),
+                offset: new PhysicalPoint((i + 0.5) * contact_width + gap, height + pin_length).plain(),
+            });
             this.contacts.push(this.addChild(c));
         }
         for (let i = w; i < this.pins.length; i++) {
-            let c = new Contact({id: newAddress(this), offset: new PhysicalPoint((this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length)});
+            let c = new Contact({
+                id: newAddress(this),
+                offset: new PhysicalPoint((this.pins.length - i - 1 + 0.5) * contact_width + gap, -pin_length).plain(),
+            });
             this.addChild(c);
             this.contacts.push(c);
         }
