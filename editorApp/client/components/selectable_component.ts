@@ -21,7 +21,7 @@ export class SelectableComponent extends Component {
         return this._selected;
     }
     materialized(b?: boolean): boolean {
-        const z = super.materialized();
+        const z = super.materialized(b);
         if (b === false) {
             this.selected(false);
         }

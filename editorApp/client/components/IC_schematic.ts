@@ -139,9 +139,11 @@ export class IntegratedCircuitSchematic extends SelectableComponent {
         } as IntegratedCircuitSchematicSpec;        
     }
     materialized(b?: boolean): boolean {
+        // debugger;
         let z = super.materialized(b);
         if (z) {
             this.rect.attrs['address'] = this.address();
+            console.log('set rect address', this.rect.attrs['address']);
         }
         return z;
     }
