@@ -1,10 +1,8 @@
 import Konva from 'konva';
-import { Breadboard } from './components/breadboard';
 import { Contact } from './components/contact';
-import { address, Addressable, roots, getByAddress } from './address';
-import { Selectable } from './actions/select_action';
+import { roots } from './address';
 import { Component } from './components/component';
-import { typeGuard } from './utils';
+import { selectionAddresses } from './components/selectable_component';
 
 let _stage: Konva.Stage | null = null;
 let _gridAlignment: number | null = null;
@@ -196,40 +194,6 @@ export function layerByName(name: string): Konva.Layer | null {
     return defaultLayer();
 }
 
-let _selection: Selectable[] = [];
-export function selection(): Selectable[] {
-    return _selection;
-}
-
-export function selectionByType<T>(q: { new(...args: any[]): T }): T[] {
-    return selection().filter(x => typeGuard(x, q)).map(x => x as any as T);
-}
-
-export function selectionAddresses(s?: string[]): string[] {
-    if (s !== undefined) {
-        clearSelection();
-        s.forEach(a => select(getByAddress(a)));
-    }
-    return _selection
-        .filter(a => (a instanceof Component))
-        .map(a => address((a as any) as Addressable))
-        .sort();
-}
-
-export function clearSelection() {
-    for (const s of _selection) select(s, false);
-}
-
-export function select(x: any, v?: boolean) {
-    if (v === undefined) v = true;
-    (x as Selectable).selected(v);
-    if (v) {
-        _selection.push(x);
-    } else {
-        _selection = _selection.filter(y => y != x);
-    }
-}
-
 export interface StageState {
     components: any[];
     selection: string[];
@@ -240,7 +204,7 @@ export function fullState(): StageState {
         components: [],
         selection: selectionAddresses(),
     }
-    roots.forEach((v, k) => {
+    roots.forEach((v) => {
         z.components.push((v as Component).spec());
     })
     return z;

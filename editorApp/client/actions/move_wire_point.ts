@@ -1,9 +1,10 @@
 import { Action, actionDeserializers } from '../action';
 import Konva from 'konva';
-import { actionLayer, defaultLayer, selectionAddresses, Point, gridAlignment, PhysicalPoint, PlainPoint } from '../stage';
+import { actionLayer, defaultLayer, PhysicalPoint, PlainPoint } from '../stage';
 import { Wire, WirePoint, WirePointSpec, removeRedundantPoints, addHelperPoints } from '../components/wire';
 import { getByAddress, copy } from '../address';
 import assertExists from 'ts-assert-exists';
+import { selectionAddresses } from '../components/selectable_component';
 
 const marker = 'MoveWirePointAction';
 

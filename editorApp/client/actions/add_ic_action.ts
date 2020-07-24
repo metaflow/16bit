@@ -1,7 +1,7 @@
 import { Action, actionDeserializers } from "../action";
 import { KonvaEventObject } from "konva/types/Node";
 import { Component, deserializeComponent } from "../components/component";
-import { actionLayer, defaultLayer, gridAlignment, Point, PhysicalPoint, ScreenPoint } from "../stage";
+import { actionLayer, defaultLayer, PhysicalPoint } from "../stage";
 
 const marker = 'PlaceComponentAction';
 

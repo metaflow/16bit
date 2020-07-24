@@ -1,11 +1,11 @@
 import Konva from 'konva';
 import { Contact } from './contact';
-import { scale,  pointAsNumber, selectionByType, PhysicalPoint } from '../stage';
+import { scale,  pointAsNumber, PhysicalPoint } from '../stage';
 import { newAddress, getTypedByAddress } from '../address';
-import { Selectable } from '../actions/select_action';
 import { Component, ComponentSpec } from './component';
 import { appActions } from '../action';
 import { MoveWirePointAction } from '../actions/move_wire_point';
+import { selectionByType, SelectableComponent } from './selectable_component';
 
 export interface WirePointSpec extends ComponentSpec {
     contact?: string | null;
@@ -33,7 +33,7 @@ modelled as "fixed" flag and "midpoint" (helper at the moment).
 After moving all points in wire we should check wire self-intersections to remove "loops".
 */
 
-export class WirePoint extends Component implements Selectable {
+export class WirePoint extends SelectableComponent {
     selectableInterface: true = true;
     _contact: Contact | null = null;
     selectionRect: Konva.Rect;
@@ -121,7 +121,6 @@ export class Wire extends Component {
     points: WirePoint[] = [];
     constructor(spec?: WireSpec) {
         super(spec);
-        console.log('wire()', spec);
         this.line = new Konva.Line({
             points: [],
             stroke: 'blue',

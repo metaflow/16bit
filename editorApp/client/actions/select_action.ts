@@ -1,14 +1,9 @@
 import { Action, actionDeserializers } from "../action";
 import Konva from "konva";
-import { stage, actionLayer, select, selectionAddresses, clearSelection, ScreenPoint } from "../stage";
-import { getByAddress } from "../address";
+import { stage, actionLayer, ScreenPoint } from "../stage";
+import { selectionAddresses } from "../components/selectable_component";
 
 const marker = 'SelectAction';
-
-export interface Selectable {
-    selectableInterface: true;
-    selected(v?: boolean): boolean;
-}
 
 actionDeserializers.push(function (data: any): Action | null {
     if (data['typeMarker'] !== marker) return null;
@@ -32,12 +27,10 @@ export class SelectAction implements Action {
         this.prevSelection = selectionAddresses();
     }
     apply(): void {
-        clearSelection();
-        this.newSelection.map(x => getByAddress(x)).forEach(x => select(x));
+        selectionAddresses(this.newSelection);
     }
     undo(): void {
-        clearSelection();
-        this.prevSelection.map(x => getByAddress(x)).forEach(x => select(x));
+        selectionAddresses(this.prevSelection);
     }
     mousemove(event: Konva.KonvaEventObject<MouseEvent>): boolean {
         if (this.rect == null) return false;
@@ -54,7 +47,6 @@ export class SelectAction implements Action {
         for (const s of selected) {
             const a = s.attrs['address'];
             this.newSelection.push(a);
-            const x = getByAddress(a);
         }
         this.apply();
         return false;

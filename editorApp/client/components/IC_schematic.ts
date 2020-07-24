@@ -1,10 +1,10 @@
-import { Component, componentDeserializers, ComponentSpec } from "./component";
+import { componentDeserializers, ComponentSpec } from "./component";
 import Konva from "konva";
 import { scale, pointAsNumber, PhysicalPoint } from "../stage";
 import { Contact } from "./contact";
 import { appActions } from "../action";
-import { Selectable } from "../actions/select_action";
-import { MoveIcSchematicAction } from "../actions/move_ic_schematic";
+import { MoveSelectionAction } from "../actions/move_selection";
+import { SelectableComponent } from "./selectable_component";
 
 const marker = 'IntegratedCircuitSchematic';
 
@@ -30,7 +30,7 @@ export interface IntegratedCircuitSchematicSpec {
     super?: ComponentSpec;
 }
 
-export class IntegratedCircuitSchematic extends Component implements Selectable  {
+export class IntegratedCircuitSchematic extends SelectableComponent {
     rect: Konva.Rect;
     name: Konva.Text;
     left_pins: string[] = [];
@@ -39,7 +39,6 @@ export class IntegratedCircuitSchematic extends Component implements Selectable 
     right_labels: Konva.Text[] = [];
     contacts: Contact[] = [];
     pin_lines: Konva.Line[] = [];
-    _selected: boolean = false;
 
     constructor(spec: IntegratedCircuitSchematicSpec) {
         super(spec.super);
@@ -82,15 +81,6 @@ export class IntegratedCircuitSchematic extends Component implements Selectable 
         this.shapes.add(this.name);
         this.updateLayout();
         this.setupEvents();
-    }
-    selectableInterface: true = true; 
-    selected(v?: boolean | undefined): boolean {
-        if (v !== undefined) {
-            this._selected = v;
-            this.mainColor(v ? 'red' : 'black');
-            this.updateLayout();
-        }
-        return this._selected;
     }
     updateLayout() {
         super.updateLayout();
@@ -161,7 +151,8 @@ export class IntegratedCircuitSchematic extends Component implements Selectable 
             console.log('mousedown on IC');
             e.cancelBubble = true;
             if (appActions.onMouseDown(e)) return;
-            appActions.current(new MoveIcSchematicAction(o));
+            o.selected(true);
+            appActions.current(new MoveSelectionAction());
         };
         this.rect.on('mousedown', f);
         this.right_labels.forEach(x => x.on('mousedown', f));

@@ -1,6 +1,6 @@
 import { Addressable, address, addAddressRoot, removeAddressRoot, newAddress } from "../address";
 import Konva from "konva";
-import { select, PhysicalPoint, PlainPoint } from "../stage";
+import { PhysicalPoint, PlainPoint } from "../stage";
 import assertExists from "ts-assert-exists";
 
 export const componentDeserializers: { (data: any): (Component | null) }[] = [];
@@ -10,7 +10,7 @@ export interface ComponentSpec {
     id?: string;
 }
 
-export abstract class Component implements Addressable {
+export class Component implements Addressable {
     _parent: Component | null = null;
     children = new Map<string, Component>();
     shapes = new Konva.Group();
@@ -36,10 +36,8 @@ export abstract class Component implements Addressable {
         this.children.forEach(c => c.materialized(b));
         if (!b) {
             if (this._parent == null) {
+                // This must be a address root.
                 removeAddressRoot(assertExists(this.id()));
-            }
-            if ((this as any).selectableInterface) {
-                select(this, false);
             }
         }
         return this._materialized;
