@@ -2,6 +2,7 @@ import { Addressable, address, addAddressRoot, removeAddressRoot, newAddress } f
 import Konva from "konva";
 import { PhysicalPoint, PlainPoint } from "../stage";
 import assertExists from "ts-assert-exists";
+import { typeGuard } from "../utils";
 
 export const componentDeserializers: { (data: any): (Component | null) }[] = [];
 
@@ -133,6 +134,16 @@ export class Component implements Addressable {
             id: this._id,
             offset: this._offset.plain(),
         } as ComponentSpec;
+    }
+    descendants<T>(q: { new(...args: any[]): T }): T[] {
+        const z: T[] = [];
+        this.children.forEach(c => {
+            if (typeGuard(c, q)) {
+                z.push(c);
+                z.push(...c.descendants(q));
+            }
+        });
+        return z;
     }
 }
 

@@ -3,10 +3,11 @@ import { appActions } from "../action";
 import { scale, addContact, removeContact } from "../stage";
 import { Component, ComponentSpec } from "./component";
 import { AddWireAction } from "../actions/add_wire";
+import { SelectableComponent } from "./selectable_component";
 
 const radius = 0.8;
 
-export class Contact extends Component {
+export class Contact extends SelectableComponent {
     circle: Konva.Circle;
     constructor(spec: ComponentSpec) {
         super(spec);
@@ -44,7 +45,7 @@ export class Contact extends Component {
     }
     updateLayout(): void {
         super.updateLayout();
-        this.circle.fill(this.mainColor());
+        this.circle.fill(this.selected() ? 'green' : this.mainColor());
         this.circle.position(this.absolutePosition().screen());
         this.circle.radius(radius * scale());
     }

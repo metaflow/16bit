@@ -15,9 +15,10 @@ export class SelectableComponent extends Component {
                     _selection.add(this);
                 } else {
                     _selection.delete(this);
-                }
-            }
-        }        
+                }                
+            }            
+        }
+        
         return this._selected;
     }
     materialized(b?: boolean): boolean {
@@ -41,7 +42,14 @@ export function selectionByType<T>(q: { new(...args: any[]): T }): T[] {
 export function selectionAddresses(s?: string[]): string[] {
     if (s !== undefined) {
         clearSelection();
-        s.forEach(a => getTypedByAddress(SelectableComponent, a)?.selected(true));
+        s.forEach(a => {
+            const t = getTypedByAddress(SelectableComponent, a);
+            if (t === null) {
+                console.error('cannot find', a, 'of type SelectableComponent');
+                return;
+            } 
+            t.selected(true);
+        });
     }
     return selection().map(x => x.address()).sort();
 }

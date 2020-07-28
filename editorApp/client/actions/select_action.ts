@@ -67,6 +67,7 @@ export class SelectAction implements Action {
         this.rect.width(pos.x - this.rect.x());
         this.rect.height(pos.y - this.rect.y());
         this.rect.remove();
+        console.log('selected', this.newSelection);
         return true;
     }
     cancel(): void {

@@ -195,17 +195,17 @@ export function layerByName(name: string): Konva.Layer | null {
 }
 
 export interface StageState {
-    components: any[];
+    roots: any[];
     selection: string[];
 }
 
 export function fullState(): StageState {
     let z: StageState = {
-        components: [],
+        roots: [],
         selection: selectionAddresses(),
     }
     roots.forEach((v) => {
-        z.components.push((v as Component).spec());
+        z.roots.push((v as Component).spec());
     })
     return z;
 }

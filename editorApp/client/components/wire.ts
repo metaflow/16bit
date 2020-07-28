@@ -6,6 +6,7 @@ import { Component, ComponentSpec } from './component';
 import { appActions } from '../action';
 import { MoveWirePointAction } from '../actions/move_wire_point';
 import { selectionByType, SelectableComponent } from './selectable_component';
+import { MoveSelectionAction } from '../actions/move_selection';
 
 export interface WirePointSpec extends ComponentSpec {
     contact?: string | null;
@@ -53,8 +54,7 @@ export class WirePoint extends SelectableComponent {
             e.cancelBubble = true;
             if (appActions.onMouseDown(e)) return;
             if (point.selected()) {
-                const points: WirePoint[] = selectionByType(WirePoint);
-                appActions.current(new MoveWirePointAction(points, PhysicalPoint.cursor()));
+                appActions.current(new MoveSelectionAction());
             } else {
                 appActions.current(new MoveWirePointAction([point], PhysicalPoint.cursor()));
             }
@@ -81,13 +81,6 @@ export class WirePoint extends SelectableComponent {
         this.selectionRect.width(wirePointSize * scale());
         this.selectionRect.height(wirePointSize * scale());
         this.selectionRect.stroke(this._selected ? 'red' : (this.helper ? 'green' : 'black'));
-    }
-    selected(v?: boolean): boolean {
-        if (v !== undefined) {
-            this._selected = v;
-            this.updateLayout();
-        }
-        return this._selected;
     }
     contact(contact?: Contact | null): Contact | null {
         if (contact !== undefined) {

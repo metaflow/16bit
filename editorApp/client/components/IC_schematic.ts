@@ -143,7 +143,6 @@ export class IntegratedCircuitSchematic extends SelectableComponent {
         let z = super.materialized(b);
         if (z) {
             this.rect.attrs['address'] = this.address();
-            console.log('set rect address', this.rect.attrs['address']);
         }
         return z;
     }

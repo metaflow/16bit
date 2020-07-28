@@ -5,6 +5,15 @@ import { json } from 'express';
 
 export const actionDeserializers: { (data: any): (Action | null) }[] = [];
 
+export function deserializeAction(data: any) : Action {
+    for (const d of actionDeserializers) {
+        const a = d(data);
+        if (a !== null) return a;
+    }
+    console.error('cannot deserialize action', data);
+    throw new Error('cannot deserialize action');
+}
+
 export interface Action {
     apply(): void;
     undo(): void;
@@ -108,15 +117,7 @@ export class Actions {
         if (s === null) return;
         let h = JSON.parse(s);
         for (const data of h) {
-            let a: Action | null = null;
-            for (const d of actionDeserializers) {
-                a = d(data);
-                if (a !== null) break;
-            }
-            if (a == null) {
-                console.error(`Cannot apply deserialized action "${JSON.stringify(data)}"`);
-                break;
-            }
+            const a = deserializeAction(data);
             a.apply();
             this.history.push(a);
             if (debugActions) {
@@ -125,5 +126,6 @@ export class Actions {
         }
     }
 }
+
 
 export let appActions = new Actions();

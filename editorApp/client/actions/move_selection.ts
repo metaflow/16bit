@@ -2,11 +2,12 @@ import { IntegratedCircuitSchematic } from "../components/IC_schematic";
 import { Action, actionDeserializers } from "../action";
 import { KonvaEventObject } from "konva/types/Node";
 import { actionLayer, defaultLayer, PhysicalPoint } from "../stage";
-import { getTypedByAddress } from "../address";
+import { getTypedByAddress, all } from "../address";
 import assertExists from "ts-assert-exists";
 import { deserializeComponent, Component } from "../components/component";
 import { WirePoint } from "../components/wire";
 import { selectionByType, selection } from "../components/selectable_component";
+import { Contact } from "../components/contact";
 
 const marker = 'MoveIcSchematicAction';
 
@@ -36,7 +37,15 @@ export class MoveSelectionAction implements Action {
         console.log('points', points);
         const ics = selectionByType(IntegratedCircuitSchematic);
         console.log('schematics', ics);
-        console.log('component', selectionByType(Component));
+        const cc = ics.flatMap((c: Component) => c.descendants(Contact));
+        console.log('contacts', cc);
+        const attached = all(WirePoint).filter((p: WirePoint) => {
+            return cc.some((c: Contact) => {
+                return c.absolutePosition().distance(p.absolutePosition()) < 0.1; // TODO: constant or function call;
+            });
+        });
+        points.push(...(attached.filter((p: WirePoint) => points.indexOf(p) == -1)));
+        console.log('all points', points);
     }
     apply(): void {
         const d = this.to.clone().sub(this.from);

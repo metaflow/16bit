@@ -1,6 +1,7 @@
 import { Component } from "./components/component";
 import { typeGuard } from "./utils";
 
+// TODO: maybe make it a part of component?
 export interface Addressable {
     id(): string|undefined;
     addressParent(): Addressable | null;
@@ -56,6 +57,15 @@ export function getByAddress(address?: string): any | null {
     }
     if (t === undefined) return null;
     return t;
+}
+
+export function all<T>(q : { new(...args: any[]): T }): T[] {
+    return Array.from(roots.values()).flatMap((a: Addressable) => {
+        if (typeGuard(a, Component)) {
+            return a.descendants(q);
+        }
+        return [];
+    });
 }
 
 export function newAddress(p?: Component): string {
