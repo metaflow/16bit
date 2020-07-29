@@ -7,14 +7,15 @@ const marker = 'SelectAction';
 
 actionDeserializers.push(function (data: any): Action | null {
     if (data['typeMarker'] !== marker) return null;
-    const s: Spec = data['spec'];
+    const s: SelectActionSpec = data;
     let z = new SelectAction();
     z.newSelection = s.newSelection;
     z.prevSelection = s.prevSelection;
     return z;
 });
 
-interface Spec {
+interface SelectActionSpec {
+    typeMarker: 'SelectAction';
     prevSelection: string[];
     newSelection: string[];
 }
@@ -73,14 +74,12 @@ export class SelectAction implements Action {
     cancel(): void {
         this.rect?.remove();
     }
-    serialize(): any {
-        let z: Spec = {
+    serialize() {
+        let z: SelectActionSpec = {
+            typeMarker: marker,
             prevSelection: this.prevSelection,
             newSelection: this.newSelection,
         };
-        return {
-            'typeMarker': marker,
-            'spec': z,
-        };
+        return z;
     }
 }

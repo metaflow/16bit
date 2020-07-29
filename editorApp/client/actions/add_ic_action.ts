@@ -5,9 +5,15 @@ import { actionLayer, defaultLayer, PhysicalPoint } from "../stage";
 
 const marker = 'PlaceComponentAction';
 
+interface PlaceComponentActionSpec {
+    typeMarker: 'PlaceComponentAction';
+    component_spec: any;
+}
+
 actionDeserializers.push(function(data: any): Action|null {
     if (data['typeMarker'] !== marker) return null;
-    let c = deserializeComponent(data['spec']);
+    const s: PlaceComponentActionSpec = data;
+    let c = deserializeComponent(s.component_spec);
     if (c == null) return null;
     let z = new PlaceComponentAction(c);
     z.xy = z.component.offset();
@@ -50,9 +56,10 @@ export class PlaceComponentAction implements Action {
         this.undo();
     }
     serialize(): any {
-        return  {
-            'typeMarker': marker,
-            'spec': this.component.spec(),
-        }
+        const z: PlaceComponentActionSpec = {
+            typeMarker: marker,
+            component_spec: this.component.spec(),
+        };
+        return z;
     }
 }

@@ -130,10 +130,11 @@ export class Component implements Addressable {
         return this._mainColor;
     }
     spec(): any {
-        return {
+        const z: ComponentSpec = {
             id: this._id,
             offset: this._offset.plain(),
-        } as ComponentSpec;
+        };
+        return z;
     }
     descendants<T>(q: { new(...args: any[]): T }): T[] {
         const z: T[] = [];

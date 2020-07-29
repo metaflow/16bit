@@ -11,6 +11,11 @@ interface AddWireActionSpec {
     points: Konva.Vector2d[];
 };
 
+actionDeserializers.push(function (data: any): Action | null {
+    if (data['typeMarker'] != marker) return null;
+    return new AddWireAction(data);
+});
+
 export class AddWireAction implements Action {
     wire: Wire | null = null;
     line: Konva.Line;
@@ -125,15 +130,11 @@ export class AddWireAction implements Action {
     cancel(): void {
         this.removeHelpers();
     }
-    serialize(): AddWireActionSpec {
-        return {
+    serialize() {
+        const z: AddWireActionSpec = {
             typeMarker: marker,
             points: this.points.map(p => ({ x: p.getX(), y: p.getY() } as Konva.Vector2d)),
         };
+        return z;
     }
 }
-
-actionDeserializers.push(function (data: any): Action | null {
-    if (data['typeMarker'] != marker) return null;
-    return new AddWireAction(data);
-});

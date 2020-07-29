@@ -1,7 +1,7 @@
 import { IntegratedCircuitSchematic } from "../components/IC_schematic";
 import { Action, actionDeserializers } from "../action";
 import { KonvaEventObject } from "konva/types/Node";
-import { actionLayer, defaultLayer, PhysicalPoint } from "../stage";
+import { actionLayer, defaultLayer, PhysicalPoint, PlainPoint } from "../stage";
 import { getTypedByAddress } from "../address";
 import assertExists from "ts-assert-exists";
 import { deserializeComponent, Component } from "../components/component";
@@ -11,16 +11,17 @@ const marker = 'MoveIcSchematicAction';
 actionDeserializers.push(function (data: any): Action | null {
   if (data['typeMarker'] !== marker) return null;
   const s: MoveIcSchematicActionSpec = data;
-  let z = new MoveIcSchematicAction(assertExists(getTypedByAddress(IntegratedCircuitSchematic, s.ic_address)), s.from);
-  z.to = s.to;
+  const ic = assertExists(getTypedByAddress(IntegratedCircuitSchematic, s.ic_address));
+  let z = new MoveIcSchematicAction(ic, new PhysicalPoint(s.from));
+  z.to = new PhysicalPoint(s.to);
   return z;
 });
 
 
 interface MoveIcSchematicActionSpec {
   typeMarker: 'MoveIcSchematicAction';
-  from: PhysicalPoint;
-  to: PhysicalPoint;
+  from: PlainPoint;
+  to: PlainPoint;
   ic_address: string;
 }
 
@@ -74,8 +75,12 @@ return false;
         this.actionIc.hide();
     }
     serialize() {
-        return {
-// TODO: implement
-        } as MoveIcSchematicActionSpec;
+        const z: MoveIcSchematicActionSpec = {
+            from: this.from.plain(),
+            to: this.to.plain(),
+            ic_address: this.ic.address(),   
+            typeMarker: marker,         
+        };
+        return z;
     }
 }

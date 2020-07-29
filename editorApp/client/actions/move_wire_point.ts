@@ -10,14 +10,15 @@ const marker = 'MoveWirePointAction';
 
 actionDeserializers.push(function (data: any): Action | null {
   if (data['typeMarker'] !== marker) return null;
-  const s: spec = data['spec'];
+  const s: MoveWirePointActionSpec = data;
   let z = new MoveWirePointAction(s.points.map(a => getByAddress(a)), new PhysicalPoint(s.from));
   z.selection = s.selection;
   z.to = new PhysicalPoint(s.to);
   return z;
 });
 
-interface spec {
+interface MoveWirePointActionSpec {
+  typeMarker: 'MoveWirePointAction';
   points: string[];
   from: PlainPoint;
   to: PlainPoint;
@@ -115,18 +116,16 @@ export class MoveWirePointAction implements Action {
     this.from = origin;
     this.to = origin;
   }
-  serialize(): any {
-    const z: spec = {
+  serialize() {
+    const z: MoveWirePointActionSpec = {
+      typeMarker: marker,
       points: this.affectedPointsAddresses,
       from: this.from.plain(),
       to: this.to.plain(),
       states: this.states,
       selection: this.selection,
     };
-    return {
-      'typeMarker': marker,
-      'spec': z,
-    }
+    return z;
   }
   apply(): void {
     const dxy = this.to.clone().sub(this.from);

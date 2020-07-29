@@ -1,7 +1,7 @@
 import { IntegratedCircuitSchematic } from "../components/IC_schematic";
 import { Action, actionDeserializers } from "../action";
 import { KonvaEventObject } from "konva/types/Node";
-import { actionLayer, defaultLayer, PhysicalPoint } from "../stage";
+import { actionLayer, defaultLayer, PhysicalPoint, PlainPoint } from "../stage";
 import { getTypedByAddress, all } from "../address";
 import assertExists from "ts-assert-exists";
 import { deserializeComponent, Component } from "../components/component";
@@ -9,20 +9,20 @@ import { WirePoint } from "../components/wire";
 import { selectionByType, selection } from "../components/selectable_component";
 import { Contact } from "../components/contact";
 
-const marker = 'MoveIcSchematicAction';
+const marker = 'MoveSelectionAction';
 
 actionDeserializers.push(function (data: any): Action | null {
   if (data['typeMarker'] !== marker) return null;
   const s: MoveSelectionActionSpec = data;
-  let z = new MoveSelectionAction(s.from);
-  z.to = s.to;
+  let z = new MoveSelectionAction(new PhysicalPoint(s.from));
+  z.to = new  PhysicalPoint(s.to);
   return z;
 });
 
 interface MoveSelectionActionSpec {
   typeMarker: 'MoveSelectionAction';
-  from: PhysicalPoint;
-  to: PhysicalPoint;
+  from: PlainPoint;
+  to: PlainPoint;
 }
 
 export class MoveSelectionAction implements Action {
@@ -46,6 +46,7 @@ export class MoveSelectionAction implements Action {
         });
         points.push(...(attached.filter((p: WirePoint) => points.indexOf(p) == -1)));
         console.log('all points', points);
+
     }
     apply(): void {
         const d = this.to.clone().sub(this.from);
@@ -67,8 +68,11 @@ export class MoveSelectionAction implements Action {
     cancel(): void {
     }
     serialize() {
-        return {
-// TODO: implement
-        } as MoveSelectionActionSpec;
+        const z: MoveSelectionActionSpec = {
+            typeMarker: marker,
+            from: this.from.plain(),
+            to: this.to.plain(),
+        };        
+        return z;
     }
 }

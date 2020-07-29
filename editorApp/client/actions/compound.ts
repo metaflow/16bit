@@ -56,10 +56,11 @@ export class CompoundAction implements Action {
     cancel(): void {
         this.actions.forEach(a => a.cancel());
     }
-    serialize(): CompoundActionSpec {
-        return {
+    serialize() {
+        const z: CompoundActionSpec = {
             typeMarker: marker,
             actions: this.actions.map(a => a.serialize()),
         };
+        return z;
     }
 }
