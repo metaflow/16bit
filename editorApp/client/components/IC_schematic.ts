@@ -5,6 +5,7 @@ import { Contact } from "./contact";
 import { appActions } from "../action";
 import { MoveSelectionAction } from "../actions/move_selection";
 import { SelectableComponent } from "./selectable_component";
+import { SelectAction } from "../actions/select_action";
 
 const marker = 'IntegratedCircuitSchematic';
 
@@ -152,7 +153,10 @@ export class IntegratedCircuitSchematic extends SelectableComponent {
             console.log('mousedown on IC');
             e.cancelBubble = true;
             if (appActions.onMouseDown(e)) return;
-            o.selected(true);
+            const a = new SelectAction();
+            a.newSelection = [o.address()];
+            appActions.current(a);
+            appActions.commit();
             appActions.current(new MoveSelectionAction());
         };
         this.rect.on('mousedown', f);

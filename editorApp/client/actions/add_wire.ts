@@ -60,10 +60,6 @@ export class AddWireAction implements Action {
                 helper: false,
                 offset: p.plain(),
             };
-            const c = closesetContact(p);
-            if (c != null && c.absolutePosition().distance(p) < 0.1) {
-                s.contact = c.address();
-            }
             specs.push(s);
         }
         specs = removeRedundantPoints(specs);

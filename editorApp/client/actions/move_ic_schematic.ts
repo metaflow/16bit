@@ -25,7 +25,6 @@ interface MoveIcSchematicActionSpec {
   ic_address: string;
 }
 
-// TODO: maybe just "move component"?
 export class MoveIcSchematicAction implements Action {
     from: PhysicalPoint;
     to: PhysicalPoint;
@@ -76,10 +75,10 @@ return false;
     }
     serialize() {
         const z: MoveIcSchematicActionSpec = {
+            typeMarker: marker, 
             from: this.from.plain(),
             to: this.to.plain(),
             ic_address: this.ic.address(),   
-            typeMarker: marker,         
         };
         return z;
     }

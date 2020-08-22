@@ -148,7 +148,6 @@ export class MoveWirePointAction implements Action {
     const dxy = this.to.clone().sub(this.from);
     for (const s of this.states) {
       const sp = moveSingleWire(dxy, s);
-      console.log('aux spec', sp);
       s.auxWire?.pointsSpec(sp);
     } 
     return false;

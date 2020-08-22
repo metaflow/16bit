@@ -6,28 +6,36 @@ import { getTypedByAddress, all } from "../address";
 import assertExists from "ts-assert-exists";
 import { deserializeComponent, Component } from "../components/component";
 import { WirePoint } from "../components/wire";
-import { selectionByType, selection } from "../components/selectable_component";
+import { selectionByType, selection, selectionAddresses } from "../components/selectable_component";
 import { Contact } from "../components/contact";
+import { CompoundAction } from "./compound";
+import { MoveWirePointAction } from "./move_wire_point";
+import { MoveIcSchematicAction } from "./move_ic_schematic";
 
 const marker = 'MoveSelectionAction';
 
 actionDeserializers.push(function (data: any): Action | null {
-  if (data['typeMarker'] !== marker) return null;
-  const s: MoveSelectionActionSpec = data;
-  let z = new MoveSelectionAction(new PhysicalPoint(s.from));
-  z.to = new  PhysicalPoint(s.to);
-  return z;
+    if (data['typeMarker'] !== marker) return null;
+    const s: MoveSelectionActionSpec = data;
+    let z = new MoveSelectionAction(new PhysicalPoint(s.from));
+    z.selection = s.selection;
+    z.to = new PhysicalPoint(s.to);
+    return z;
 });
 
 interface MoveSelectionActionSpec {
-  typeMarker: 'MoveSelectionAction';
-  from: PlainPoint;
-  to: PlainPoint;
+    typeMarker: 'MoveSelectionAction';
+    from: PlainPoint;
+    to: PlainPoint;
+    selection: string[];
 }
 
 export class MoveSelectionAction implements Action {
     from: PhysicalPoint;
     to: PhysicalPoint;
+    moveICs: MoveIcSchematicAction[] = [];
+    movePoints: MoveWirePointAction;
+    selection: string[];
     constructor(from?: PhysicalPoint) {
         console.log('move selection', selection());
         if (from == undefined) from = PhysicalPoint.cursor();
@@ -46,16 +54,29 @@ export class MoveSelectionAction implements Action {
         });
         points.push(...(attached.filter((p: WirePoint) => points.indexOf(p) == -1)));
         console.log('all points', points);
-
+        const actions: Action[] = [];
+        this.movePoints = new MoveWirePointAction(points, from);
+        for (const ic of ics) {
+            this.moveICs.push(new MoveIcSchematicAction(ic, from));
+        }
+        this.selection = selectionAddresses();
     }
     apply(): void {
-        const d = this.to.clone().sub(this.from);
+        this.movePoints.to = this.to;
+        this.movePoints.apply();
+        for (const a of this.moveICs) {
+            a.to = this.to;
+            a.apply();
+        }
     }
     undo(): void {
+        this.movePoints.undo();
+        this.moveICs.forEach(a => a.undo());
     }
     mousemove(event: KonvaEventObject<MouseEvent>): boolean {
         this.to = PhysicalPoint.cursor();
-        const d = this.to.clone().sub(this.from);
+        this.movePoints.mousemove(event);
+        for (const a of this.moveICs) a.mousemove(event);
         return false;
     }
     mousedown(event: KonvaEventObject<MouseEvent>): boolean {
@@ -63,16 +84,21 @@ export class MoveSelectionAction implements Action {
     }
     mouseup(event: KonvaEventObject<MouseEvent>): boolean {
         this.to = PhysicalPoint.cursor();
+        this.movePoints.mouseup(event);
+        for (const a of this.moveICs) a.mouseup(event);
         return true;
     }
     cancel(): void {
+        this.movePoints.cancel();
+        this.moveICs.forEach(a => a.cancel());
     }
     serialize() {
         const z: MoveSelectionActionSpec = {
             typeMarker: marker,
             from: this.from.plain(),
             to: this.to.plain(),
-        };        
+            selection: this.selection,
+        };
         return z;
     }
 }

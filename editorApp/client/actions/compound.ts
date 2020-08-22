@@ -20,7 +20,7 @@ export class CompoundAction implements Action {
     constructor(actions: Action[]) {        
         this.actions = actions;
         this.done = actions.map(_ => false);
-    }    
+    }
     apply(): void {
         this.actions.forEach(a => a.apply());
     }

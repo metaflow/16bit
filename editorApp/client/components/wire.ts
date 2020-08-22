@@ -9,7 +9,6 @@ import { selectionByType, SelectableComponent } from './selectable_component';
 import { MoveSelectionAction } from '../actions/move_selection';
 
 export interface WirePointSpec extends ComponentSpec {
-    contact?: string | null;
     helper: boolean;
 }
 
@@ -36,13 +35,11 @@ After moving all points in wire we should check wire self-intersections to remov
 
 export class WirePoint extends SelectableComponent {
     selectableInterface: true = true;
-    _contact: Contact | null = null;
     selectionRect: Konva.Rect;
     _selected: boolean = false;
     helper: boolean;
     constructor(spec: WirePointSpec) {
         super(spec);
-        if (spec.contact != null) this._contact = getTypedByAddress(Contact, spec.contact);
         this.helper = spec.helper;
         this.selectionRect = new Konva.Rect({
             dash: [1, 1],
@@ -71,9 +68,6 @@ export class WirePoint extends SelectableComponent {
     }
     updateLayout() {
         super.updateLayout();
-        if (this._contact != null) {
-            this.offset(this._contact.absolutePosition());
-        }
         const d = wirePointSize / 2;
         let xy = this.absolutePosition().sub(new PhysicalPoint(d, d)).screen();
         this.selectionRect.x(xy.x);
@@ -82,20 +76,12 @@ export class WirePoint extends SelectableComponent {
         this.selectionRect.height(wirePointSize * scale());
         this.selectionRect.stroke(this._selected ? 'red' : (this.helper ? 'green' : 'black'));
     }
-    contact(contact?: Contact | null): Contact | null {
-        if (contact !== undefined) {
-            this._contact = contact;
-            this.updateLayout();
-        }
-        return this._contact;
-    }
     wire(): Wire {
         return this.parent() as Wire;
     }
     spec(): any {
         return {
             address: this.materialized() ? this.address() : undefined,
-            contact: this.contact()?.address(),
             helper: this.helper,
             offset: this._offset.plain(),
             id: this._id,
@@ -136,13 +122,6 @@ export class Wire extends Component {
         this.line.points(pp);
         this.line.strokeWidth(wireWidth * scale());
         this.line.stroke(this.mainColor());
-    }
-    end(i: number, c?: Contact): WirePoint {
-        if (c !== undefined) {
-            this.points[i].contact(c);
-            this.updateLayout();
-        }
-        return this.points[i];
     }
     pointsSpec(v?: WirePointSpec[]): WirePointSpec[] {
         let o = this;
