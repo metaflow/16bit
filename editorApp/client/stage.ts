@@ -85,6 +85,12 @@ export abstract class Point {
     atan2(): number {
         return Math.atan2(this._x, this._y);
     }
+    dot(o: this): number {
+        return this._x * o._x + this._y * o._y; 
+    }
+    length(): number {
+        return Math.sqrt(this._x * this._x + this._y * this._y);
+    }
 };
 
 export class ScreenPoint extends Point implements Konva.Vector2d {

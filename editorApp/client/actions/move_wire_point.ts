@@ -2,9 +2,10 @@ import { Action, actionDeserializers } from '../action';
 import Konva from 'konva';
 import { actionLayer, defaultLayer, PhysicalPoint, PlainPoint } from '../stage';
 import { Wire, WirePoint, WirePointSpec, removeRedundantPoints, addHelperPoints } from '../components/wire';
-import { getByAddress, copy } from '../address';
+import { getByAddress, copy, all } from '../address';
 import assertExists from 'ts-assert-exists';
 import { selectionAddresses } from '../components/selectable_component';
+import { Contact } from '../components/contact';
 
 const marker = 'MoveWirePointAction';
 
@@ -38,18 +39,22 @@ function moveSingleWire(dxy: PhysicalPoint, s: SingleWireMove): WirePointSpec[] 
   let z: WirePointSpec[] = [];
   w.points.forEach(p => p.remove());
   const affected: boolean[] = [];
+  const fixed: boolean[] = [];
   const nextVertical: boolean[] = [];
   const nextHorizontal: boolean[] = [];
+  const contacts = all(Contact);
   for (const p of s.originalPoints) {
     const a = s.affectedPointsIds.indexOf(assertExists(p.id)) != -1;
     if (p.helper && !a) continue;
     affected.push(a);
+    fixed.push(contacts.some(c => c.absolutePosition().distance(new PhysicalPoint(p.offset)) < 0.1));
     z.push(copy(p));
   }
+  console.log('fixed', fixed);
   for (let i = 0; i < z.length; i++) {
     if (i + 1 < z.length) {
       nextVertical.push(z[i].offset.x == z[i + 1].offset.x);
-      nextHorizontal.push(z[i].offset.x == z[i + 1].offset.y);
+      nextHorizontal.push(z[i].offset.y == z[i + 1].offset.y);
     }
     if (affected[i]) {
       z[i].offset = new PhysicalPoint(z[i].offset).add(dxy).alignToGrid().plain();
@@ -58,7 +63,7 @@ function moveSingleWire(dxy: PhysicalPoint, s: SingleWireMove): WirePointSpec[] 
   for (let i = 0; i < z.length; i++) {
     const p = z[i];
     if (!affected[i] || p.helper) continue;
-    if (i > 0 && !affected[i - 1]) {
+    if (i > 0 && !affected[i - 1] && !fixed[i - 1]) {
       if (nextVertical[i - 1]) {
         z[i - 1].offset.x = p.offset.x;
       }
@@ -66,7 +71,7 @@ function moveSingleWire(dxy: PhysicalPoint, s: SingleWireMove): WirePointSpec[] 
         z[i - 1].offset.y = p.offset.y;
       }
     }
-    if (i + 1 < z.length) {
+    if (i + 1 < z.length && !affected[i + 1] && !fixed[i + 1]) {
       if (nextVertical[i]) {
         z[i + 1].offset.x = p.offset.x;
       }
