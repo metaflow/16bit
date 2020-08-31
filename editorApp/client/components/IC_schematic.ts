@@ -150,7 +150,6 @@ export class IntegratedCircuitSchematic extends SelectableComponent {
     setupEvents() {
         const o = this;
         const f = (e: Konva.KonvaEventObject<MouseEvent>) => {
-            console.log('mousedown on IC');
             e.cancelBubble = true;
             if (appActions.onMouseDown(e)) return;
             const a = new SelectAction();

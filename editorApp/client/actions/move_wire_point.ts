@@ -50,7 +50,6 @@ function moveSingleWire(dxy: PhysicalPoint, s: SingleWireMove): WirePointSpec[] 
     fixed.push(contacts.some(c => c.absolutePosition().distance(new PhysicalPoint(p.offset)) < 0.1));
     z.push(copy(p));
   }
-  console.log('fixed', fixed);
   for (let i = 0; i < z.length; i++) {
     if (i + 1 < z.length) {
       nextVertical.push(z[i].offset.x == z[i + 1].offset.x);
@@ -116,7 +115,6 @@ export class MoveWirePointAction implements Action {
       w.hide();
       s.auxWire?.show(actionLayer());
     }
-    console.log('wire move states', this.states);
     if (origin === undefined) origin = PhysicalPoint.cursor();
     this.from = origin;
     this.to = origin;

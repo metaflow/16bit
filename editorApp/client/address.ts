@@ -20,7 +20,6 @@ export function addAddressRoot(r: Addressable) {
 }
 
 export function removeAddressRoot(id: string) {
-    console.log('remove address root', id)
     if (!roots.has(id)) {
         console.error(`address root "${id}" does not exist`);
         return;

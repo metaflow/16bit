@@ -71,7 +71,7 @@ export class AddWireAction implements Action {
         });
         this.wire.updateLayout();
         this.wire.materialized(true);
-        this.wire.show(defaultLayer());
+        this.wire.show(defaultLayer()); 
         this.removeHelpers();
     }
     removeHelpers() {
@@ -117,7 +117,6 @@ export class AddWireAction implements Action {
     mousedown(event: Konva.KonvaEventObject<MouseEvent>): boolean {
         if (event.evt.button != 0) return true;
         const xy = this.orthogonalCursor();
-        console.log(event);
         this.points.push(xy);
         const c = closesetContact(xy);
         // Complete action if clicked on contact.

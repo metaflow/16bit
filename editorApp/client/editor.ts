@@ -8,14 +8,15 @@ import { ic74x245 } from './components/74x245';
 import { PlaceComponentAction } from './actions/add_ic_action';
 import { AddWireAction } from './actions/add_wire';
 import * as Vec2D from 'vector2d';
+import { selection } from './components/selectable_component';
 
 (window as any).add245 = function () {
-  console.log('add 245');
   appActions.current(new PlaceComponentAction(new ic74x245()));
 };
 
 (window as any).clearActionsHistory = function () {
   localStorage.setItem('actions_history', JSON.stringify([]));
+  location.reload();
 };
 
 (window as any).addOrthogonal = function() {
@@ -35,7 +36,6 @@ stage(new Konva.Stage({
 }));
 
 document.getElementById('container')?.addEventListener('contextmenu', e => {
-  console.log('on context menu');
   e.preventDefault()
 });
 
@@ -61,6 +61,14 @@ stage()?.on('mousedown', function (e) {
     defaultLayer()?.batchDraw();
     actionLayer()?.batchDraw();
     return;
+  }
+  // No action.  
+  if (e.evt.button != 0 && selection().length > 0) {
+    const a = new SelectAction();
+    appActions.current(a);
+    appActions.commit();
+    defaultLayer()?.batchDraw();
+    actionLayer()?.batchDraw();
   }
 });
 
@@ -97,6 +105,3 @@ gridAlignment(5); // TODO: make grid algnment change an action.
 appActions.load();
 defaultLayer()?.batchDraw();
 actionLayer()?.batchDraw();
-
-const v = new Vec2D.Vector(1.1, 2.2);
-console.log(v);

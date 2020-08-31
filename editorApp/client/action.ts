@@ -119,6 +119,7 @@ export class Actions {
         for (const data of h) {
             const a = deserializeAction(data);
             a.apply();
+            console.log('applying', a);
             this.history.push(a);
             if (debugActions) {
                 this.stateHistory.push(fullState());

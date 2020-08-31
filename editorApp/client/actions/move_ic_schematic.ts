@@ -32,7 +32,6 @@ export class MoveIcSchematicAction implements Action {
     ic: IntegratedCircuitSchematic;
     actionIc: Component;
     constructor(s: IntegratedCircuitSchematic, from?: PhysicalPoint) {
-        console.log('move ic', s);
         if (from == undefined) from = PhysicalPoint.cursor();
         this.from = from;
         this.to = from;

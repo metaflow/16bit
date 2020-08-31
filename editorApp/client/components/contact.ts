@@ -34,7 +34,6 @@ export class Contact extends SelectableComponent {
     setupEvents() {
         const o = this;
         this.circle.on('mousedown', function (e) {
-            console.log('mousedown on contact');
             e.cancelBubble = true;
             if (appActions.onMouseDown(e)) return;
             appActions.current(new AddWireAction({

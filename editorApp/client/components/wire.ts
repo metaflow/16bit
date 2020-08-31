@@ -47,7 +47,6 @@ export class WirePoint extends SelectableComponent {
         });
         const point = this;
         this.selectionRect.on('mousedown', function (e) {
-            console.log('click on wire point');
             e.cancelBubble = true;
             if (appActions.onMouseDown(e)) return;
             if (point.selected()) {
@@ -174,7 +173,6 @@ export function removeRedundantPoints(s: WirePointSpec[]): WirePointSpec[] {
         const ji = pi.clone().sub(pj);
         const jk = pk.clone().sub(pj);
         const cosa = ji.dot(jk) / ji.length() / jk.length();
-        console.log('cosa', cosa, ji.dot(jk), ji.length(), jk.length());
         if (cosa < -0.99) {
             j = k;
             continue;

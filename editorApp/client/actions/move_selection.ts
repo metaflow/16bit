@@ -37,23 +37,18 @@ export class MoveSelectionAction implements Action {
     movePoints: MoveWirePointAction;
     selection: string[];
     constructor(from?: PhysicalPoint) {
-        console.log('move selection', selection());
         if (from == undefined) from = PhysicalPoint.cursor();
         this.from = from;
         this.to = from;
         const points = selectionByType(WirePoint);
-        console.log('points', points);
         const ics = selectionByType(IntegratedCircuitSchematic);
-        console.log('schematics', ics);
         const cc = ics.flatMap((c: Component) => c.descendants(Contact));
-        console.log('contacts', cc);
         const attached = all(WirePoint).filter((p: WirePoint) => {
             return cc.some((c: Contact) => {
                 return c.absolutePosition().distance(p.absolutePosition()) < 0.1; // TODO: constant or function call;
             });
         });
         points.push(...(attached.filter((p: WirePoint) => points.indexOf(p) == -1)));
-        console.log('all points', points);
         const actions: Action[] = [];
         this.movePoints = new MoveWirePointAction(points, from);
         for (const ic of ics) {

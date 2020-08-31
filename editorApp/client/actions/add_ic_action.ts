@@ -1,13 +1,14 @@
 import { Action, actionDeserializers } from "../action";
 import { KonvaEventObject } from "konva/types/Node";
 import { Component, deserializeComponent } from "../components/component";
-import { actionLayer, defaultLayer, PhysicalPoint } from "../stage";
+import { actionLayer, defaultLayer, PhysicalPoint, PlainPoint } from "../stage";
 
 const marker = 'PlaceComponentAction';
 
 interface PlaceComponentActionSpec {
     typeMarker: 'PlaceComponentAction';
     component_spec: any;
+    offset: PlainPoint;
 }
 
 actionDeserializers.push(function(data: any): Action|null {
@@ -16,7 +17,7 @@ actionDeserializers.push(function(data: any): Action|null {
     let c = deserializeComponent(s.component_spec);
     if (c == null) return null;
     let z = new PlaceComponentAction(c);
-    z.xy = z.component.offset();
+    z.xy = new PhysicalPoint(s.offset);
     return z;
 });
 
@@ -59,6 +60,7 @@ export class PlaceComponentAction implements Action {
         const z: PlaceComponentActionSpec = {
             typeMarker: marker,
             component_spec: this.component.spec(),
+            offset: this.xy.plain(),
         };
         return z;
     }
