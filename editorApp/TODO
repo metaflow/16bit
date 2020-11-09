@@ -1,8 +1,10 @@
+("todo list" extension format)
+
 - make selection an action on toolbar @done
 - remove normal righ / middle click menu @done
 - add orthogonal wire action @done
-- right click deselects
-- mark wire points attached to contacts
+- right click deselects @done
+- mark wire points attached to contacts @done
 - make contact capture clicks in a bigger area than itself
 - when adding wire - click on contact should complete the wire
 - schematic serealization

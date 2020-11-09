@@ -82,6 +82,9 @@ export abstract class Point {
         const dy = this._y - other._y;
         return Math.sqrt(dx * dx + dy * dy);
     }
+    closeTo(other: this): boolean {
+        return this.distance(other) < 0.1;
+    }
     atan2(): number {
         return Math.atan2(this._x, this._y);
     }
@@ -215,3 +218,5 @@ export function fullState(): StageState {
     })
     return z;
 }
+
+ 

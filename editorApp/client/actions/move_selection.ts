@@ -44,9 +44,7 @@ export class MoveSelectionAction implements Action {
         const ics = selectionByType(IntegratedCircuitSchematic);
         const cc = ics.flatMap((c: Component) => c.descendants(Contact));
         const attached = all(WirePoint).filter((p: WirePoint) => {
-            return cc.some((c: Contact) => {
-                return c.absolutePosition().distance(p.absolutePosition()) < 0.1; // TODO: constant or function call;
-            });
+            return cc.some((c: Contact) =>  c.absolutePosition().closeTo(p.absolutePosition()));
         });
         points.push(...(attached.filter((p: WirePoint) => points.indexOf(p) == -1)));
         const actions: Action[] = [];

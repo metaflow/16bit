@@ -1,12 +1,13 @@
 import Konva from 'konva';
 import { Contact } from './contact';
-import { scale,  pointAsNumber, PhysicalPoint } from '../stage';
+import { scale,  pointAsNumber, PhysicalPoint, closesetContact } from '../stage';
 import { newAddress, getTypedByAddress } from '../address';
 import { Component, ComponentSpec } from './component';
 import { appActions } from '../action';
 import { MoveWirePointAction } from '../actions/move_wire_point';
 import { selectionByType, SelectableComponent } from './selectable_component';
 import { MoveSelectionAction } from '../actions/move_selection';
+import e from 'express';
 
 export interface WirePointSpec extends ComponentSpec {
     helper: boolean;
@@ -42,7 +43,6 @@ export class WirePoint extends SelectableComponent {
         super(spec);
         this.helper = spec.helper;
         this.selectionRect = new Konva.Rect({
-            dash: [1, 1],
             name: 'selectable',
         });
         const point = this;
@@ -73,6 +73,12 @@ export class WirePoint extends SelectableComponent {
         this.selectionRect.y(xy.y);
         this.selectionRect.width(wirePointSize * scale());
         this.selectionRect.height(wirePointSize * scale());
+        const c = closesetContact(this.absolutePosition());
+        if (c == null || !c.absolutePosition().closeTo(this.absolutePosition())) {
+            this.selectionRect.dash([1, 1]);
+        } else {
+            this.selectionRect.dash([]);
+        }
         this.selectionRect.stroke(this._selected ? 'red' : (this.helper ? 'green' : 'black'));
     }
     wire(): Wire {

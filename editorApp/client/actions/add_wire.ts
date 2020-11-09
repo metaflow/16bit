@@ -120,7 +120,7 @@ export class AddWireAction implements Action {
         this.points.push(xy);
         const c = closesetContact(xy);
         // Complete action if clicked on contact.
-        return (this.points.length >=2 && c != null && c.absolutePosition().distance(xy) < 0.1);
+        return (this.points.length >=2 && c != null && c.absolutePosition().closeTo(xy));
     }
     cancel(): void {
         this.removeHelpers();

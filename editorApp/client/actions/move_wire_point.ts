@@ -47,7 +47,7 @@ function moveSingleWire(dxy: PhysicalPoint, s: SingleWireMove): WirePointSpec[] 
     const a = s.affectedPointsIds.indexOf(assertExists(p.id)) != -1;
     if (p.helper && !a) continue;
     affected.push(a);
-    fixed.push(contacts.some(c => c.absolutePosition().distance(new PhysicalPoint(p.offset)) < 0.1));
+    fixed.push(contacts.some(c => c.absolutePosition().closeTo(new PhysicalPoint(p.offset))));
     z.push(copy(p));
   }
   for (let i = 0; i < z.length; i++) {
