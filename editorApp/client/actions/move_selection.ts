@@ -1,14 +1,12 @@
 import { IntegratedCircuitSchematic } from "../components/IC_schematic";
 import { Action, actionDeserializers } from "../action";
 import { KonvaEventObject } from "konva/types/Node";
-import { actionLayer, defaultLayer, PhysicalPoint, PlainPoint } from "../stage";
-import { getTypedByAddress, all } from "../address";
-import assertExists from "ts-assert-exists";
-import { deserializeComponent, Component } from "../components/component";
+import { PhysicalPoint, PlainPoint } from "../stage";
+import { all } from "../address";
+import { Component } from "../components/component";
 import { WirePoint } from "../components/wire";
-import { selectionByType, selection, selectionAddresses } from "../components/selectable_component";
+import { selectionByType, selectionAddresses } from "../components/selectable_component";
 import { Contact } from "../components/contact";
-import { CompoundAction } from "./compound";
 import { MoveWirePointAction } from "./move_wire_point";
 import { MoveIcSchematicAction } from "./move_ic_schematic";
 
@@ -47,7 +45,6 @@ export class MoveSelectionAction implements Action {
             return cc.some((c: Contact) =>  c.absolutePosition().closeTo(p.absolutePosition()));
         });
         points.push(...(attached.filter((p: WirePoint) => points.indexOf(p) == -1)));
-        const actions: Action[] = [];
         this.movePoints = new MoveWirePointAction(points, from);
         for (const ic of ics) {
             this.moveICs.push(new MoveIcSchematicAction(ic, from));

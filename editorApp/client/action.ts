@@ -72,7 +72,11 @@ export class Actions {
             let sc = fullState();
             if (JSON.stringify(sa) != JSON.stringify(sc)) {
                 console.error('undo changes state');
+                console.groupCollapsed('diff')
                 console.log(diffString(sa, sc));
+                console.log('before undo', sa);
+                console.log('after undo', sc);
+                console.groupEnd();
             }
             console.log('redo');
             a.apply();          

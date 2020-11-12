@@ -213,9 +213,10 @@ export function fullState(): StageState {
         roots: [],
         selection: selectionAddresses(),
     }
-    roots.forEach((v) => {
-        z.roots.push((v as Component).spec());
-    })
+    const keys = Array.from(roots.keys());
+    keys.sort().forEach(k => {
+        z.roots.push((roots.get(k) as Component).spec());
+    });
     return z;
 }
 

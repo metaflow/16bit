@@ -2,13 +2,12 @@ import Konva from 'konva';
 import hotkeys from 'hotkeys-js';
 import { appActions } from './action';
 import { stage, defaultLayer, actionLayer, gridAlignment } from './stage';
-import { newAddress } from './address';
 import { SelectAction } from './actions/select_action';
 import { ic74x245 } from './components/74x245';
 import { PlaceComponentAction } from './actions/add_ic_action';
 import { AddWireAction } from './actions/add_wire';
-import * as Vec2D from 'vector2d';
 import { selection } from './components/selectable_component';
+import { DeleteSelectionAction } from './actions/delete_action';
 
 (window as any).add245 = function () {
   appActions.current(new PlaceComponentAction(new ic74x245()));
@@ -27,6 +26,14 @@ import { selection } from './components/selectable_component';
   appActions.current(new SelectAction());
 };
 
+(window as any).deleteSelection = deleteSelection;
+
+function deleteSelection() {
+  appActions.current(new DeleteSelectionAction());
+  appActions.commit();
+  defaultLayer()?.batchDraw();
+  actionLayer()?.batchDraw();
+}
 
 // first we need to create a stage
 stage(new Konva.Stage({
@@ -94,11 +101,15 @@ hotkeys('ctrl+z', function (e) {
   actionLayer()?.batchDraw();
 });
 
-hotkeys('ctrl+shift+z', function (e) {
+hotkeys('ctrl+y', function (e) {
   e.preventDefault();
   appActions.redo();
   defaultLayer()?.batchDraw();
   actionLayer()?.batchDraw();
+});
+
+hotkeys('del', function (e) {
+  deleteSelection();
 });
 
 gridAlignment(5); // TODO: make grid algnment change an action.

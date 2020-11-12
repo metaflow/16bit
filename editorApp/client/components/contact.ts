@@ -48,7 +48,4 @@ export class Contact extends SelectableComponent {
         this.circle.position(this.absolutePosition().screen());
         this.circle.radius(radius * scale());
     }
-    static closeTo(p: Point): Contact[] {
-
-    }
 }
