@@ -53,53 +53,89 @@ export class Actions {
         if (this.current()?.mousemove(event)) this.commit();
         return true;
     }
-    commit() {
+    commit(keepForwardHistory: boolean = false) {
         const a = this.current();
-        if (a == null) return;
-        console.log('applying', a);
+        if (a == null) return;                 
         this.history.push(a);
-        this.forwardHistory.splice(0, this.forwardHistory.length);
-        this.current(null);
-        a.apply();
-        console.log(fullState());
-        if (debugActions) {
+        if (!keepForwardHistory) this.forwardHistory.splice(0, this.forwardHistory.length);
+        this.current(null);        
+        if (debugActions) {            
+            console.groupCollapsed(`applying ${a.constructor.name}`);
+            console.log('action', a);
+            a.apply();
             let sa = this.stateHistory[this.stateHistory.length - 1];
             let sb = fullState();
             this.stateHistory.push(sb);            
-            console.log('undo');
             a.undo();
-            console.log(fullState());
-            let sc = fullState();
-            if (JSON.stringify(sa) != JSON.stringify(sc)) {
+            let s = fullState();
+            if (JSON.stringify(sa) != JSON.stringify(s)) {                   
                 console.error('undo changes state');
-                console.groupCollapsed('diff')
-                console.log(diffString(sa, sc));
-                console.log('before undo', sa);
-                console.log('after undo', sc);
+                console.group('details');
+                console.log(diffString(sa, s));
+                console.log('expected state', sa);
+                console.log('actual state', s);
                 console.groupEnd();
             }
-            console.log('redo');
-            a.apply();          
-            console.log(fullState());  
-            let sd = fullState();
-            if (JSON.stringify(sb) != JSON.stringify(sd)) {
-                console.error('redo changes state');
-                console.log(diffString(sb, sd));
+            a.apply();
+            s = fullState();
+            if (JSON.stringify(sb) != JSON.stringify(s)) {                
+                console.error('redo changes state');                
+                console.group('details');                
+                console.log('diff', diffString(sb, s));
+                console.log('expected state', sb);
+                console.log('actual state', s);
+                console.groupEnd();
             }
-        }
-        this.save();
+            console.log('new state', fullState());
+            console.groupEnd();
+        } else {
+            console.log(`applying ${a.constructor.name}`);
+            a.apply();
+        }        
+        this.save();        
     }
     undo() {
-        let a = this.history.pop();
-        if (a == null) return;
-        a.undo();
+        let a = this.history.pop();  
+        if (a == null) return;        
+        if (debugActions) {
+            console.groupCollapsed(`undo action ${a.constructor.name}`);
+            // State history is [..., sa, sb], we will end up in [..., sa].
+            let sb = this.stateHistory.pop();
+            let sa = this.stateHistory[this.stateHistory.length - 1];            
+            console.log('action', a);
+            a.undo();
+            let s = fullState();
+            if (JSON.stringify(sa) != JSON.stringify(s)) {
+                console.groupEnd();
+                console.error('undo state does not match recorded');
+                console.group('details');
+                console.log('diff', diffString(sa, s));
+                console.log('expected state', sa);
+                console.log('actual state', s);
+            }
+            a.apply();
+            s = fullState();
+            if (JSON.stringify(sb) != JSON.stringify(s)) {
+                console.groupEnd();
+                console.error('redo state does not match');
+                console.group('details');
+                console.log('diff', diffString(sb, s));
+                console.log('expected state', sb);
+                console.log('actual state', s);
+            }
+            a.undo();
+            console.log('new state', fullState());
+            console.groupEnd();
+        } else {
+            console.log(`undo action ${a.constructor.name}`)
+            a.undo();
+        }        
         this.forwardHistory.push(a);
     }
     redo() {
-        let action = this.forwardHistory.pop();
-        if (action == null) return;
-        action.apply();
-        this.history.push(action);
+        this.cancelCurrent();
+        this.current(this.forwardHistory.pop());
+        this.commit(true);
     }
     cancelCurrent() {
         const a = this.current();
@@ -121,13 +157,14 @@ export class Actions {
         if (s === null) return;
         let h = JSON.parse(s);
         for (const data of h) {
-            const a = deserializeAction(data);
-            a.apply();
-            console.log('applying', a);
-            this.history.push(a);
-            if (debugActions) {
-                this.stateHistory.push(fullState());
-            }
+            this.current(deserializeAction(data));
+            this.commit();
+            //console.log('applying', a.constructor.name);
+            // a.apply();            
+            // this.history.push(a);
+            // if (debugActions) {
+            //     this.stateHistory.push(fullState());
+            // }
         }
     }
 }

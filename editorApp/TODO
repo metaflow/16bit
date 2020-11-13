@@ -5,7 +5,7 @@
 - add orthogonal wire action @done
 - right click deselects @done
 - mark wire points attached to contacts @done
-- delete, undo, select complains about state change
+- delete, undo, select complains about state change @done
 - make contact capture clicks in a bigger area than itself
 - when adding wire - click on contact should complete the wire
 - schematic serealization
