@@ -8,6 +8,7 @@ import { PlaceComponentAction } from './actions/add_ic_action';
 import { AddWireAction } from './actions/add_wire';
 import { selection } from './components/selectable_component';
 import { DeleteSelectionAction } from './actions/delete_action';
+import { backgroundColor } from './theme';
 
 (window as any).add245 = function () {
   appActions.current(new PlaceComponentAction(new ic74x245()));
@@ -39,8 +40,10 @@ function deleteSelection() {
 stage(new Konva.Stage({
   container: 'container',   // id of container <div>
   width: 1000,
-  height: 1000
+  height: 1000,
 }));
+
+stage()!.container().style.backgroundColor = backgroundColor;
 
 document.getElementById('container')?.addEventListener('contextmenu', e => {
   e.preventDefault()
@@ -50,9 +53,9 @@ document.getElementById('container')?.addEventListener('contextmenu', e => {
 stage()?.add(defaultLayer(new Konva.Layer()));
 stage()?.add(actionLayer(new Konva.Layer()));
 // Background color.
-defaultLayer()?.add(new Konva.Rect({
-  x: 0, y: 0, width: 1000, height: 1000, fill: '#FAFAFA',
-}))
+// defaultLayer()?.add(new Konva.Rect({
+//   x: 0, y: 0, width: 1000, height: 1000, fill: '#FAFAFA',
+// }))
 
 stage()?.on('mousemove', function (e: Konva.KonvaEventObject<MouseEvent>) {
   if (appActions.onMouseMove(e)) {

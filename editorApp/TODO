@@ -8,9 +8,9 @@
 - delete, undo, select complains about state change @done
 - make contact capture clicks in a bigger area than itself
 - when adding wire - click on contact should complete the wire
-- schematic serealization
-- option to align to grid
-- option to align to contacts
+- dark theme
+- save / load history and schematic
+
 - fix start / end wire point
 - save / load schematic w/o history
 - show / hide helper points when cursor is near the wire
@@ -35,6 +35,8 @@
     - selection
     - move
 - select wire
+- option to align to grid
+- option to align to contacts
 - delete wire
 add breadboard
 move breadboard (one in relation to another)

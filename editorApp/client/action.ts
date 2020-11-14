@@ -159,12 +159,6 @@ export class Actions {
         for (const data of h) {
             this.current(deserializeAction(data));
             this.commit();
-            //console.log('applying', a.constructor.name);
-            // a.apply();            
-            // this.history.push(a);
-            // if (debugActions) {
-            //     this.stateHistory.push(fullState());
-            // }
         }
     }
 }
